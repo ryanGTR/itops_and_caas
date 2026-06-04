@@ -1,18 +1,18 @@
-PROPRIETARY — INTERNAL USE ONLY
+EDUCATIONAL / PROOF-OF-CONCEPT — PUBLIC
 
-Copyright (c) 2026. All rights reserved.
+Copyright (c) 2026 ryanGTR
 
-This repository and its contents constitute confidential and proprietary
-material intended solely for authorized internal use within the organization.
+This repository is a PUBLIC, educational proof-of-concept (PoC). It models a
+bank's internal developer platform (IDP) for learning and demonstration
+purposes only. It is NOT a production system.
 
-No part of this repository may be copied, reproduced, distributed, published,
-or disclosed to any third party outside the organization, in whole or in part,
-by any means, without prior written authorization.
+- It contains NO real production data.
+- It contains NO real credentials. All example values are clearly fake
+  (e.g. EXAMPLE_FAKE_KEY_DO_NOT_USE) and exist solely to exercise the
+  secret-scanning guardrail.
+- The "internal / confidential" framing in the documents is part of the
+  modelled scenario, NOT a real confidentiality classification.
 
-This is an internal banking Internal Developer Platform (IDP) Phase 1
-prototype. It contains no production data and no real credentials; all
-examples use clearly fake placeholder values.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this repository, to use, copy, modify, and learn from it. Provided "as is",
+without warranty of any kind, express or implied.

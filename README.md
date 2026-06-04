@@ -1,7 +1,11 @@
-# pe-idp-platform — 銀行內部開發者平台(IDP)Phase 1 雛形
+# itops_and_caas — 銀行內部開發者平台(IDP)Phase 1 雛形
 
 > Platform Engineering × ISO 27001 / ISO 20000 治理對齊
-> **版本**:Phase 1 | 目前進度:TASK-01(儲存庫結構初始化)
+> **版本**:Phase 1
+>
+> 📢 **這是公開的學習用 PoC(proof-of-concept)**,用來示範一個銀行內部開發者
+> 平台「該長什麼樣」。**不含任何真實資料或憑證**,文件中的「內部/機密」字眼
+> 屬於模擬情境,非真實機密分級。詳見 [`LICENSE`](./LICENSE)。
 
 本 repo 是一個銀行內部開發者平台(Internal Developer Platform)的 Phase 1 雛形。
 核心不是「裝工具」,而是用最輕的技術(Git + GitHub Actions)體現 Platform
@@ -56,4 +60,4 @@ Duties)的技術核心。
 
 ## 授權
 
-僅供內部使用,見 [`LICENSE`](./LICENSE)。
+公開的學習用 PoC,可自由使用、修改、學習,見 [`LICENSE`](./LICENSE)。
