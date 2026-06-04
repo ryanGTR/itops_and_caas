@@ -1,0 +1,30 @@
+# .gitleaks.toml — 機敏資訊掃描規則設定([TASK-03])
+#
+# 對應治理控制項:ISO 27001 A.8.12 資料外洩防護 / A.5.17 鑑別資訊
+#
+# 設計:沿用 gitleaks 內建完整規則集(涵蓋 AWS / GCP / 私鑰 / 通用 API key
+#       / Token 等),再依本專案需要微調 allowlist。
+#       規則即程式碼,變更需平台 + 資安群組審核(SoD)。
+
+title = "pe-idp-platform 機敏資訊掃描政策"
+
+[extend]
+# 使用 gitleaks 預設規則集為基礎。
+useDefault = true
+
+[allowlist]
+description = "本專案允許的例外(僅限明確、可稽核的情況)"
+
+# 文件中為了「教學示意」而出現的明顯假值佔位符,不應誤判為真實機敏資訊。
+# 注意:此處僅放行「明顯假值」字串本身;任何真實格式的金鑰仍會被攔截。
+regexes = [
+  '''EXAMPLE_FAKE_KEY_DO_NOT_USE''',
+  '''\{\{[A-Z_]+\}\}''',          # README 範本佔位符,如 {{HOW_TO_RUN}}
+]
+
+# 說明文件路徑允許出現「描述性」的假示意值(非真實憑證)。
+# 注意:這不放行 tests/ 下的「故意違規」測試夾具——那必須被攔截。
+paths = [
+  '''COMPLIANCE_MAP\.md''',
+  '''GOVERNANCE_BRIEF\.md''',
+]
