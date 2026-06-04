@@ -1,0 +1,32 @@
+# --- Secrets / credentials(務必別進版控,呼應 TASK-03 機敏掃描) ---
+*.pem
+*.key
+*.p12
+*.pfx
+.env
+.env.*
+!.env.example
+secrets/
+credentials/
+
+# --- Python(scripts/ 與後續稽核工具) ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# --- 稽核報告產出(TASK-07,屬產出物不進版控) ---
+audit-reports/
+*.audit.csv
+*.audit.md
+
+# --- OS / 編輯器 ---
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
