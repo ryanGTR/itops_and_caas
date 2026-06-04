@@ -10,7 +10,9 @@
 #   - 「用護欄」(scaffold/ 範本內容)→ 一般開發者可貢獻
 #
 # 註:以下 @org/* 為佔位團隊代號,推送到 GitHub 後請替換成實際組織團隊。
-#     完整的 branch protection 強制(政策變更需指定群組額外核准)在 [TASK-05] 落實。
+#     本檔僅「指定誰是 owner」;要讓它具強制力,須搭配 branch protection 開啟
+#     「Require review from Code Owners」——見 scripts/setup_branch_protection.sh
+#     與 policies/README.md([TASK-05] 落實)。
 
 # ── 預設:整個 repo 由平台團隊兜底 ──────────────────────────────
 *                           @org/platform-team
@@ -19,6 +21,8 @@
 /policies/                  @org/platform-team @org/security-team
 /.github/workflows/         @org/platform-team @org/security-team
 /scripts/                   @org/platform-team @org/security-team
+/.gitleaks.toml             @org/platform-team @org/security-team
+/tests/                     @org/platform-team @org/security-team
 
 # ── 治理文件:平台 + 資安共管 ────────────────────────────────────
 /PROJECT_PLAN.md            @org/platform-team @org/security-team
