@@ -1,0 +1,33 @@
+# 範本內建 .gitignore — 生成的新專案預設帶此排除清單
+# 重點:預設就把 secrets 擋在版控外,呼應機敏掃描護欄(ISO 27001 A.8.12)
+
+# --- Secrets / credentials(絕不進版控) ---
+*.pem
+*.key
+*.p12
+*.pfx
+.env
+.env.*
+!.env.example
+secrets/
+credentials/
+
+# --- 常見語言產出(視專案語言保留需要的段落) ---
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+# Java
+target/
+*.class
+# Node
+node_modules/
+dist/
+build/
+
+# --- OS / 編輯器 ---
+.DS_Store
+*.swp
+.idea/
+.vscode/

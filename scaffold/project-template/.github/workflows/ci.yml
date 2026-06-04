@@ -1,0 +1,58 @@
+# ci.yml — 範本內建的「預設合規」CI 骨架
+#
+# 目的:從本範本生成的每個新專案,開箱即帶有下列護欄,無需開發者手動設定。
+#       (體現「護欄而非閘門」+「降低認知負荷」)
+#
+# 對應治理控制項:
+#   - 機敏資訊掃描       → ISO 27001 A.8.12 資料外洩防護 / A.5.17 鑑別資訊
+#   - 結構與命名檢查     → ISO 27001 A.5.37 文件化操作程序
+#   - 範本即預核准標準變更 → ISO 20000 服務目錄 / 標準變更
+#
+# 注意:本檔為 SKELETON(骨架)。偵測規則的完整實作與「故意違規」測試,
+#       於平台主計畫的 [TASK-03](機敏掃描)與 [TASK-04](結構檢查)補齊。
+#       生成專案後請勿移除本工作流程(見 README 的「內建合規護欄」)。
+
+name: ci-compliance
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  # ── 護欄一:機敏資訊掃描(ISO 27001 A.8.12) ──────────────────
+  # 偵測寫死的密碼 / 金鑰 / Token;偵測到即失敗,PR 無法合併。
+  secret-scan:
+    name: 機敏資訊掃描 (ISO 27001 A.8.12)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # 掃描完整歷史
+
+      # SKELETON:完整 gitleaks 設定與規則於 [TASK-03] 補齊。
+      # 範例違規值一律用明顯假值,例如 EXAMPLE_FAKE_KEY_DO_NOT_USE。
+      - name: Run gitleaks (placeholder)
+        run: |
+          echo "[TASK-03 待補] 此處將整合 gitleaks 做機敏資訊掃描。"
+          echo "偵測到寫死憑證時,此步驟應以非零碼結束,使檢查 failed。"
+
+  # ── 護欄二:結構與命名檢查(ISO 27001 A.5.37) ────────────────
+  # 驗證必要檔案存在、命名符合組織規範;不合規即失敗。
+  structure-check:
+    name: 結構與命名檢查 (ISO 27001 A.5.37)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # SKELETON:check_structure.py 的完整規則於 [TASK-04] 補齊。
+      - name: Validate project structure (placeholder)
+        run: |
+          echo "[TASK-04 待補] 此處將執行 scripts/check_structure.py。"
+          echo "缺少必要文件(如 README.md)時,應給出明確修正提示並 failed。"
+          test -f README.md || { echo "::error::缺少 README.md"; exit 1; }
