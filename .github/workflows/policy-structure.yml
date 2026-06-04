@@ -1,0 +1,39 @@
+# policy-structure.yml — 結構與命名規範守門員(平台自身護欄)
+#
+# 目標:強制專案符合組織規範(必要文件、目錄結構、命名),不合規無法合併。
+#       規則本體在 scripts/check_structure.py,每條規則標註對應 ISO 控制項。
+#
+# 對應治理控制項:
+#   - ISO 27001 A.5.37 文件化操作程序(必要文件 / 結構 / 命名一致)
+#   - ISO 27001 A.5.3  職責分離(檢查 CODEOWNERS 保護護欄路徑)
+#   - ISO 20000        服務管理一致性
+#
+# 設計:護欄而非閘門。本檔屬「護欄」,變更需平台 + 資安群組審核(SoD)。
+
+name: policy-structure
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  structure-check:
+    name: 結構與命名規範檢查 (ISO 27001 A.5.37)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # 缺少必要文件 / 結構 / 命名不符 → 腳本以結束碼 1 結束 → 檢查 failed
+      # → PR 無法合併。腳本會印出每項的明確修正提示。
+      - name: Run structure policy check
+        run: python3 scripts/check_structure.py --root .
