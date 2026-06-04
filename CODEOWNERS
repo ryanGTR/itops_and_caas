@@ -6,29 +6,33 @@
 #   - ISO 27001 A.8.4  原始碼存取控制
 #
 # 設計原則:嚴格分離「改護欄的人」與「用護欄的人」。
-#   - 「改護欄」(policies/、.github/workflows/、scripts/)→ 需平台 + 資安群組審核
+#   - 「改護欄」(policies/、.github/workflows/、scripts/ 等)→ 需平台 + 資安審核
 #   - 「用護欄」(scaffold/ 範本內容)→ 一般開發者可貢獻
 #
-# 註:以下 @org/* 為佔位團隊代號,推送到 GitHub 後請替換成實際組織團隊。
-#     本檔僅「指定誰是 owner」;要讓它具強制力,須搭配 branch protection 開啟
+# ⚠️ 限制:本 repo 在個人帳號下,個人帳號無「team」,所有 owner 暫指同一人
+#     (@ryanGTR)。單一帳號無法達成真正 SoD(GitHub 不允許自己核准自己的 PR)。
+#     正式落地需 ≥2 個帳號或一個 organization,屆時把下列 owner 換成
+#     @org/platform-team、@org/security-team、@org/developers。
+#
+# 註:CODEOWNERS 只「指定 owner」;要具強制力須搭配 branch protection 開啟
 #     「Require review from Code Owners」——見 scripts/setup_branch_protection.sh
-#     與 policies/README.md([TASK-05] 落實)。
+#     與 policies/README.md。
 
-# ── 預設:整個 repo 由平台團隊兜底 ──────────────────────────────
-*                           @org/platform-team
+# ── 預設:整個 repo 由平台負責人兜底 ──────────────────────────────
+*                           @ryanGTR
 
-# ── 「改護欄」區域:政策即程式碼,需平台 + 資安雙群組審核 ──────────
-/policies/                  @org/platform-team @org/security-team
-/.github/workflows/         @org/platform-team @org/security-team
-/scripts/                   @org/platform-team @org/security-team
-/.gitleaks.toml             @org/platform-team @org/security-team
-/tests/                     @org/platform-team @org/security-team
+# ── 「改護欄」區域:政策即程式碼,需平台 + 資安審核 ────────────────
+/policies/                  @ryanGTR
+/.github/workflows/         @ryanGTR
+/scripts/                   @ryanGTR
+/.gitleaks.toml             @ryanGTR
+/tests/                     @ryanGTR
 
 # ── 治理文件:平台 + 資安共管 ────────────────────────────────────
-/PROJECT_PLAN.md            @org/platform-team @org/security-team
-/COMPLIANCE_MAP.md          @org/platform-team @org/security-team
-/GOVERNANCE_BRIEF.md        @org/platform-team @org/security-team
-/CODEOWNERS                 @org/platform-team @org/security-team
+/PROJECT_PLAN.md            @ryanGTR
+/COMPLIANCE_MAP.md          @ryanGTR
+/GOVERNANCE_BRIEF.md        @ryanGTR
+/CODEOWNERS                 @ryanGTR
 
 # ── 「用護欄」區域:自助範本,一般開發者可貢獻 ──────────────────
-/scaffold/                  @org/platform-team @org/developers
+/scaffold/                  @ryanGTR
