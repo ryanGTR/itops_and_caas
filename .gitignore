@@ -23,6 +23,18 @@ audit-reports/
 *.audit.csv
 *.audit.md
 
+# --- Terraform / OpenTofu(IaC 產出,不進版控;tfstate 可能含機敏) ---
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+# tfvars 可能含機敏值;範例檔保留
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+# 註:.terraform.lock.hcl 刻意「不」忽略——應納管以鎖定 provider 版本
+
 # --- OS / 編輯器 ---
 .DS_Store
 Thumbs.db
