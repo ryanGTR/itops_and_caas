@@ -22,7 +22,9 @@ permissions:
 
 jobs:
   structure-check:
-    name: 結構與命名規範檢查 (ISO 27001 A.5.37)
+    # job name 即 required-status-check 的 context,故用穩定 ASCII 名稱
+    # (對應 ISO 27001 A.5.37,詳見檔頭與步驟說明)
+    name: policy-structure
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
