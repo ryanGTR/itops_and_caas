@@ -1,0 +1,46 @@
+# policy-iac-checkov.yml — IaC 合規守門員(基礎設施即程式碼的護欄)
+#
+# 目標:任何進入 main 的 Terraform/OpenTofu 變更,都必須通過 checkov 的
+#       「IaC 合規基線」掃描;不合規無法合併。基線與可稽核豁免定義在
+#       iac/.checkov.yaml(類比 ISO SoA 適用性聲明)。
+#
+# 對應治理控制項:
+#   - ISO 27001 A.8.27 安全系統架構 / Secure by Default(合規寫進預設值)
+#   - ISO 27001 A.5.36 合規審查(政策即程式碼,自動驗證,非人工抽樣)
+#   - ISO 27001 A.8.24 加密技術使用(模組強制 at-rest 加密,由本閘門把關)
+#
+# 設計:護欄而非閘門。本檔屬「護欄」,變更需平台 + 資安群組審核(SoD)。
+
+name: policy-iac-checkov
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  iac-policy-scan:
+    # job name 即 required-status-check 的 context,故用穩定 ASCII 名稱
+    # (對應 ISO 27001 A.8.27 / A.5.36,詳見檔頭與步驟說明)
+    name: policy-iac
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # 釘住版本以求可重現(對齊本機驗證用的 checkov 版本)
+      - name: Install checkov
+        run: pip install "checkov==3.2.533"
+
+      # 不合規 → checkov 以結束碼 1 結束 → 檢查 failed → PR 無法合併。
+      # tests/ 的故意違規夾具由 .checkov.yaml 的 skip-path 排除,不在主閘門。
+      - name: Run checkov IaC policy gate
+        run: checkov -d iac --config-file iac/.checkov.yaml

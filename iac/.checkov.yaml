@@ -1,0 +1,24 @@
+# checkov 設定 — 定義本平台的「IaC 合規基線」
+#
+# 對應治理控制項:ISO 27001 A.8.27 安全系統架構 / Secure by Default;
+#                A.5.36 合規審查(政策即程式碼,自動驗證)
+#
+# 設計理念(類比 ISO SoA 適用性聲明):
+#   我們「明確宣告」哪些 checkov 檢查是必過基線、哪些是「有意識、可稽核的
+#   豁免」。豁免不是疏漏——每條都附理由,稽核可逐項檢視。這就是把
+#   COMPLIANCE_MAP 的精神套用到 IaC。
+
+framework:
+  - terraform
+
+# 故意違規夾具不納入「主閘門」(它本來就該失敗);另有 self-test 證明會被擋,
+# 比照 Phase 1 機敏掃描的違規分支做法。
+skip-path:
+  - iac/tests/
+
+# 「有意識、可稽核的豁免」——本 PoC 範圍 / 成本考量,非安全核心:
+skip-check:
+  - CKV_AWS_144   # 跨區複寫:PoC 為單區;正式環境依 RTO/RPO 再評估(A.8.14 可用性)
+  - CKV2_AWS_61   # 生命週期規則:依資料保存政策設定,屬 use-case
+  - CKV2_AWS_62   # 事件通知:屬應用層需求,非安全基線
+  - CKV_AWS_18    # 存取日誌:需集中 log bucket;正式環境應啟用(A.8.15 日誌),PoC 暫免
