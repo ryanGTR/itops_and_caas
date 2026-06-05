@@ -47,7 +47,8 @@ echo "套用分支保護:${REPO} @ ${BRANCH}"
 #   - required_pull_request_reviews.require_code_owner_reviews:動到 CODEOWNERS
 #       涵蓋的政策路徑時,必須由對應 owner(平台+資安)核准 → 「改護欄需更嚴格審核」。
 #   - enforce_admins=true:連 admin 也不能繞過(SoD 不留後門)。
-#   - required_status_checks:兩道護欄必須通過才可合併(變更管理 / A.8.32)。
+#   - required_status_checks:三道護欄必須通過才可合併(變更管理 / A.8.32)。
+#       policy-secrets / policy-structure(Phase 1)+ policy-iac(Phase 2 IaC 閘門)。
 #   - restrictions=null:不額外限制可推送者(交由 PR + review 控管)。
 #   - allow_force_pushes / allow_deletions=false:保護歷史可追溯性。
 #
@@ -56,7 +57,7 @@ read -r -d '' BODY <<JSON || true
 {
   "required_status_checks": {
     "strict": true,
-    "contexts": ["policy-secrets", "policy-structure"]
+    "contexts": ["policy-secrets", "policy-structure", "policy-iac"]
   },
   "enforce_admins": true,
   "required_pull_request_reviews": {
