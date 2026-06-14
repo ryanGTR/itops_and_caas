@@ -443,5 +443,7 @@
 - `docs/service-catalogue.md` — 服務目錄（TASK-D1）
 - `docs/request-to-change.md` — 請求→變更 程序（TASK-D2）
 - `docs/tooling-roles-and-real-world-mapping.md` — itops × GitHub × 企業 ITSM 角色與正式環境對映
+- `docs/supply-chain-signing.md` — 供應鏈 build/SBOM/掃描/簽章（TASK-D4）
+- `trust/README.md` — 簽章信任根（cosign 公鑰）
 - `docs/adr/0001-phase2-iac-stack.md` — Phase 2 IaC 技術棧決策
 - `docs/adr/0002-openliberty-runtime-and-deploy.md` — Phase D 執行環境與部署/簽章決策
