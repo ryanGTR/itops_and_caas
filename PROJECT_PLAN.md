@@ -440,5 +440,8 @@
 - `GOVERNANCE_BRIEF.md` — 給資安 / 稽核 / 主管的提案說明
 - `CLAUDE.md` — 給 Claude Code 的專案脈絡與執行慣例
 - `docs/golden-path-request-to-deploy.md` — Phase D 部署黃金路徑設計與框架對映
+- `docs/service-catalogue.md` — 服務目錄（TASK-D1）
+- `docs/request-to-change.md` — 請求→變更 程序（TASK-D2）
+- `docs/tooling-roles-and-real-world-mapping.md` — itops × GitHub × 企業 ITSM 角色與正式環境對映
 - `docs/adr/0001-phase2-iac-stack.md` — Phase 2 IaC 技術棧決策
 - `docs/adr/0002-openliberty-runtime-and-deploy.md` — Phase D 執行環境與部署/簽章決策

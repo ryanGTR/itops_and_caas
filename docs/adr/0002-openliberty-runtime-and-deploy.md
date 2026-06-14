@@ -3,7 +3,7 @@ title: ADR-0002 部署黃金路徑：OpenLiberty 執行環境與部署/簽章決
 type: adr
 created: 2026-06-14
 updated: 2026-06-14
-status: proposed（待核准；核准後改 accepted）
+status: accepted
 tags: [phase-d, openliberty, podman, opentofu, cosign, cmdb, itil, supply-chain]
 ---
 
@@ -48,9 +48,9 @@ tags: [phase-d, openliberty, podman, opentofu, cosign, cmdb, itil, supply-chain]
 - ⚠️ OpenLiberty 容器映像體積較大，首拉較慢（緩解同 ADR-0001 已知問題：換網路 / 強制 IPv4 / 公司 pull-through）。
 - ⚠️ CMDB-as-code 是「夠用」的組態管理示範，非取代企業級 CMDB 工具；定位需在文件講清楚。
 
-## 待核准事項
+## 核准與執行
 
-本 ADR 狀態為 **proposed**。核准後：① 改為 accepted；② 依 `PROJECT_PLAN.md` Phase D 逐 TASK 執行。
+本 ADR 已 **accepted**（2026-06-14，含 cosign 金鑰選型 PoC=key-pair）。依 `PROJECT_PLAN.md` Phase D 逐 TASK 執行；[TASK-D3] OpenLiberty 模組已落實本 ADR 的執行環境決策。
 
 ## See Also
 - `docs/adr/0001-phase2-iac-stack.md`

@@ -10,9 +10,11 @@
 | 機敏資訊掃描 | `.github/workflows/policy-secrets.yml` + `.gitleaks.toml` | ISO 27001 A.8.12 / A.5.17 | TASK-03 |
 | 結構與命名規範 | `.github/workflows/policy-structure.yml` + `scripts/check_structure.py` | ISO 27001 A.5.37 / A.5.3、ISO 20000 | TASK-04 |
 | 職責分離強制 | `CODEOWNERS` + `scripts/setup_branch_protection.sh` | ISO 27001 A.5.3 / A.8.4 | TASK-05 |
+| IaC 容器安全基線 | `policies/rules/openliberty_*.yaml`(CKV_OL_1~6,自訂 checkov 政策)+ `.github/workflows/policy-iac-checkov.yml` | ISO 27001 A.8.2 / A.8.27 / A.8.6 / A.8.20 | TASK-D3 |
 
-> `policies/rules/` 預留給未來「每條規則獨立成檔」的細化(Phase 2+),目前規則
-> 內嵌於上述載體中。
+> `policies/rules/` 自 [TASK-D3] 起開始放「每條規則獨立成檔」的自訂 checkov 政策
+> (容器安全基線);因 checkov 內建無 `docker_container` 檢查,由 `iac/.checkov.yaml`
+> 的 `external-checks-dir` 載入。其餘政策仍內嵌於上述載體中。
 
 ## 二、職責分離模型:用護欄 vs 改護欄
 

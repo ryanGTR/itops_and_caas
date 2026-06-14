@@ -1,0 +1,12 @@
+metadata:
+  id: "CKV_OL_2"
+  name: "容器根檔系統須唯讀 read_only=true (ISO 27001 A.8.27 / 完整性)"
+  category: "GENERAL_SECURITY"
+  severity: "HIGH"
+definition:
+  cond_type: "attribute"
+  resource_types:
+    - "docker_container"
+  attribute: "read_only"
+  operator: "equals"
+  value: true
