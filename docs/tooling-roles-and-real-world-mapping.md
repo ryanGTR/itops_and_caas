@@ -77,6 +77,37 @@ PoC 用 GitHub 一套扮演全部角色,是為了在零成本下示範**模式**
 **對稽核的論述**:我們不是「用 GitHub 取代企業治理工具」,而是用它示範一個
 **可攜的、自動化的、全程可追溯的治理模式**;模式本身與平台解耦,正式落地時對映回公司既有系統。
 
+## 6. 機密性與資料落地(Data Residency)— 稽核必問
+
+> 常見且正確的質疑:「企業很多資料是機密,把這些放 GitHub 對嗎?」分四層回答:
+
+### 6.1 公開 GitHub 只因這是「全假資料的學習 PoC」
+本 repo 公開,是因為它**不含任何真實資料或憑證**(見 `README` / `LICENSE`),
+目的是示範「該長什麼樣」。**真銀行不會把機密放公開 GitHub.com。**
+
+### 6.2 正式環境用自架 / 內網平台,資料不出網段
+| 公開 PoC | 銀行正式環境 |
+|---|---|
+| GitHub.com(公開) | GitHub **Enterprise Server**(自架機房) / GitLab **self-managed** / Azure DevOps **Server** |
+
+同樣的 Issue / PR / Actions / CODEOWNERS 機制,只是跑在**銀行自己的網段內**,code 與元資料不出門。
+> `supply-chain` 專案已示範:self-hosted GitLab 版 + Azure DevOps 版(公司真實落地)。
+
+### 6.3 最關鍵:Git 存「治理設定 + 元資料」,不存機密本體
+| 放進 Git(可版控) | **不**放進 Git(留在專用系統) |
+|---|---|
+| 部署設定、IaC、政策、文件 | **Secrets / 金鑰** → Vault / KMS / HSM |
+| CMDB 的**元資料**(CI 記錄、關係) | **客戶 / 業務資料** → 資料庫 |
+| 服務請求、變更紀錄 | **cosign 私鑰** → KMS / HSM(ADR-0002) |
+
+- **機敏掃描護欄(TASK-03)就是強制這條**:金鑰想進版控會被自動擋下。
+- 服務請求的**「資料分級」欄位**用來追蹤每個服務碰什麼等級的資料。
+- 原則:**Git 是治理的真相來源,不是機密的儲存庫。** 真機密永遠在 Vault / DB / KMS。
+
+### 6.4 不依賴平台的機密性控制
+私有 repo、RBAC、自架 / 網路隔離、Vault/KMS 機密管理、機敏掃描護欄、資料分級——
+這些**與用哪個平台無關**,換載體都適用。
+
 ## See Also
 - `docs/golden-path-request-to-deploy.md`(部署黃金路徑全貌)
 - `GOVERNANCE_BRIEF.md`(給稽核 / 主管的提案說明)
