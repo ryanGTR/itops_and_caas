@@ -1,0 +1,8 @@
+# Issue 模板設定
+# 關閉「空白 issue」：確保所有進入點都走結構化的服務請求表單（服務目錄入口）
+# 對應治理控制項：ISO 20000 服務目錄 / 服務請求一致性
+blank_issues_enabled: false
+contact_links:
+  - name: 服務目錄與這條黃金路徑怎麼運作
+    url: https://github.com/ryanGTR/itops_and_caas/blob/main/docs/service-catalogue.md
+    about: 先看服務目錄，了解「部署到 OpenLiberty」這個標準服務與後續自動化流程。

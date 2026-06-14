@@ -1,0 +1,88 @@
+name: 服務請求 — 部署應用到 OpenLiberty
+description: 從服務目錄提出「部署到 OpenLiberty 沙箱」的標準變更請求（ITIL 請求履行 / ISO 20000 服務請求）
+title: "[服務請求] 部署 <應用名> 到 <環境>"
+labels: ["service-request", "standard-change"]
+# 對應治理控制項：ISO 20000 服務目錄 / 服務請求(Request Fulfillment)、ISO 20000 標準變更
+# 設計依據：docs/golden-path-request-to-deploy.md（階段①）、PROJECT_PLAN.md [TASK-D1]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > **這是一個預核准的標準變更（Standard Change，ISO 20000）。**
+        > 「部署到 OpenLiberty 沙箱」是服務目錄裡預先核准、低風險、可重複的服務，
+        > 依框架本就不需每次走完整 CAB。送出本表單後，平台會將其轉為一個 PR（變更紀錄），
+        > 自動跑供應鏈建置/簽章 → 驗章 → 佈建 → 部署 → 登錄 CMDB。
+        >
+        > ⚠️ 本平台為**公開 PoC**：請**勿**填入任何真實機密、真實憑證或真實客戶資料。
+
+  - type: input
+    id: app-name
+    attributes:
+      label: 應用名稱
+      description: 要部署的應用程式識別名（例如 supply-chain-backend）
+      placeholder: supply-chain-backend
+    validations:
+      required: true
+
+  - type: input
+    id: source-artifact
+    attributes:
+      label: 來源 artifact / 版本
+      description: 要部署的來源（repo/映像）與版本或 tag（例如 ghcr.io/.../backend:1.2.3 或 git tag v1.2.3）
+      placeholder: "supply-chain/github/app/backend @ v1.2.3"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: 目標環境
+      description: 本 PoC 僅提供 OpenLiberty 沙箱
+      options:
+        - openliberty-sandbox（PoC 唯一環境）
+      default: 0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: data-classification
+    attributes:
+      label: 資料分級（模擬）
+      description: 此應用處理的資料分級——本 PoC 為模擬情境，非真實機密分級
+      options:
+        - public（公開）
+        - internal（內部，模擬）
+        - confidential（機密，模擬）
+      default: 0
+    validations:
+      required: true
+
+  - type: textarea
+    id: business-justification
+    attributes:
+      label: 商業理由
+      description: 為什麼需要這次部署（一兩句即可）
+      placeholder: 驗證新版本在 OpenLiberty 沙箱的行為，作為發布前的展示環境。
+    validations:
+      required: true
+
+  - type: input
+    id: requester-role
+    attributes:
+      label: 請求者角色
+      description: 你的角色（開發者 / 平台 / 資安）——用於職責分離稽核（SoD）
+      placeholder: 開發者
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: acknowledgements
+    attributes:
+      label: 確認事項
+      options:
+        - label: 我了解這是預核准的標準變更，會被轉為一個可追溯的 PR。
+          required: true
+        - label: 本請求不含任何真實機密 / 憑證 / 客戶資料（公開 PoC）。
+          required: true
+        - label: 我了解未通過供應鏈簽章與部署前驗章的 artifact 將無法部署（fail-closed）。
+          required: true
