@@ -1,0 +1,140 @@
+# 可重用簽章 pipeline(平台提供的「鋪好的路」)— TASK-D4
+#
+# 角色:itops 平台提供這條 reusable workflow;被治理的 app repo(如 supply-chain)
+#       用 `uses: ryanGTR/itops_and_caas/.github/workflows/supply-chain-sign.yml@main` 呼叫。
+#       build/sign 在「呼叫端」(app repo)跑;itops 只「定義」這條鏈與信任根。
+#
+# 鏈:build → SBOM(syft) → SCA 掃描(grype) → cosign 簽章 → 輸出 digest
+#
+# 對應治理控制項:
+#   - ISO 27001 A.8.28 安全開發 / 供應鏈完整性
+#   - ISO 27001 A.8.25 安全開發生命週期
+#   - 補上 supply-chain 專案的 L4 cosign 簽章缺口
+#
+# ⚠️ 簽章金鑰:PoC 用 cosign key-pair(私鑰由呼叫端以 secret COSIGN_PRIVATE_KEY 提供,
+#   絕不進版控);正式環境應改 KMS/HSM-backed(見 docs/adr/0002)。
+#
+# 驗證狀態:本檔為 reusable 範本,在 itops 自身 CI 不會執行(無 app 可 build);
+#   真實 build/sign/掃描留到「實跑場」(需呼叫端 app + secrets),見 docs/supply-chain-signing.md。
+
+name: supply-chain-sign
+
+on:
+  workflow_call:
+    inputs:
+      image_name:
+        description: "映像名稱(含 registry/namespace,不含 tag)"
+        required: true
+        type: string
+      image_tag:
+        description: "映像 tag"
+        required: false
+        type: string
+        default: ${{ github.sha }}
+      context:
+        description: "build context 路徑"
+        required: false
+        type: string
+        default: "."
+      dockerfile:
+        description: "Dockerfile 路徑"
+        required: false
+        type: string
+        default: "Dockerfile"
+      fail_on_severity:
+        description: "SCA 掃描在此嚴重度(含)以上即失敗"
+        required: false
+        type: string
+        default: "high"
+    secrets:
+      registry_username:
+        required: true
+      registry_password:
+        required: true
+      cosign_private_key:
+        required: true
+      cosign_password:
+        required: true
+    outputs:
+      digest:
+        description: "已簽章映像的 digest(sha256:...)"
+        value: ${{ jobs.build-sign.outputs.digest }}
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-sign:
+    runs-on: ubuntu-latest
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Registry login
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ inputs.image_name }}
+          username: ${{ secrets.registry_username }}
+          password: ${{ secrets.registry_password }}
+
+      # 1) build + push,取得不可變 digest
+      - name: Build & push
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ inputs.context }}
+          file: ${{ inputs.dockerfile }}
+          push: true
+          tags: ${{ inputs.image_name }}:${{ inputs.image_tag }}
+
+      # 2) SBOM(CycloneDX)
+      - name: Generate SBOM (syft)
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ inputs.image_name }}@${{ steps.build.outputs.digest }}
+          format: cyclonedx-json
+          output-file: sbom.cyclonedx.json
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.cyclonedx.json
+
+      # 3) SCA 掃描(grype),高風險即擋
+      - name: Vulnerability scan (grype)
+        uses: anchore/scan-action@v4
+        with:
+          image: ${{ inputs.image_name }}@${{ steps.build.outputs.digest }}
+          fail-build: true
+          severity-cutoff: ${{ inputs.fail_on_severity }}
+
+      # 4) cosign 簽章(以 digest 簽,不簽 tag)
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign image
+        env:
+          COSIGN_PASSWORD: ${{ secrets.cosign_password }}
+        run: |
+          echo "${{ secrets.cosign_private_key }}" > /tmp/cosign.key
+          cosign sign --yes --key /tmp/cosign.key \
+            "${{ inputs.image_name }}@${{ steps.build.outputs.digest }}"
+          rm -f /tmp/cosign.key
+
+      # 5) 把 SBOM 以 attestation 形式綁上映像(可追溯)
+      - name: Attest SBOM
+        env:
+          COSIGN_PASSWORD: ${{ secrets.cosign_password }}
+        run: |
+          echo "${{ secrets.cosign_private_key }}" > /tmp/cosign.key
+          cosign attest --yes --key /tmp/cosign.key \
+            --predicate sbom.cyclonedx.json --type cyclonedx \
+            "${{ inputs.image_name }}@${{ steps.build.outputs.digest }}"
+          rm -f /tmp/cosign.key
