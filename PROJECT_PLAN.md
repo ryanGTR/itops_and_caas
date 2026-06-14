@@ -264,6 +264,126 @@
 
 ---
 
+## 5-D. Phase D 工作分解 — 部署黃金路徑(需求單 → OpenLiberty)
+
+> 本階段把 Phase 1 的治理骨架(變更/SoD/稽核) + Phase 2 的 IaC 護欄模式,延伸成一條
+> 「**開發者提服務請求 → 應用安全部署上 OpenLiberty**」的端到端黃金路徑,並串接 supply-chain 專案。
+> 設計與框架對映見 `docs/golden-path-request-to-deploy.md`;技術決策見 `docs/adr/0002-openliberty-runtime-and-deploy.md`。
+> 執行慣例同前:逐 TASK、每步停下確認、不跳階段。
+
+---
+
+#### [TASK-D1] 服務目錄與服務請求單(ITIL 請求履行)
+
+**目標**:讓開發者用一張結構化表單提出「部署到 OpenLiberty」的請求,即服務目錄裡一個預核准的標準服務。
+
+**前置條件**:Phase 1 完成(PR 流程、SoD 已就位)。
+
+**步驟**:
+1. 建立 `.github/ISSUE_TEMPLATE/service-request.yml`(Issue Form):欄位含應用名、來源 artifact/版本、目標環境、商業理由、資料分級(模擬)。
+2. 在 `scaffold/docs/` 或服務目錄文件登錄此項目為「標準變更」。
+3. 文件化此請求如何轉為後續 PR(TASK-D2 銜接)。
+
+**驗收標準**:能開出一張格式正確、欄位齊全的服務請求單;文件說明其為預核准標準變更。
+
+**對應治理控制項**:ISO 20000 服務目錄 / 服務請求(Request Fulfillment);ISO 20000 標準變更。
+
+---
+
+#### [TASK-D2] 請求轉變更(PR)的銜接(ISO 20000 / ISO 27001 變更管理)
+
+**目標**:把服務請求單轉成一個有目的/風險/回退、需通過所有護欄、可追溯的變更(PR)。
+
+**步驟**:
+1. 定義「請求單 → PR」的對應(可手動或後續自動化),PR 沿用 Phase 1 PR 範本與 main 保護。
+2. 確認部署相關變更一律走 PR,護欄變更額外需平台+資安核准(沿用 TASK-05)。
+
+**驗收標準**:一張請求單能對應到一個合規 PR;無法繞過 PR 觸發部署。
+
+**對應治理控制項**:ISO 27001 A.8.32;ISO 20000 變更管理。
+
+---
+
+#### [TASK-D3] OpenTofu 模組:openliberty-service(Secure by Default)
+
+**目標**:用 OpenTofu「填參數即開出一個預設安全的 OpenLiberty(Podman 容器)執行環境」。
+
+**前置條件**:ADR-0002 核准;本機有 OpenTofu + Podman。
+
+**步驟**:
+1. 在 `iac/modules/openliberty-service/` 建模組:Podman 容器跑 OpenLiberty 官方映像,預設安全(非 root、資源上限、健康檢查、無明文機密、最小權限)。
+2. 在 `iac/examples/` 加 golden-path 範例;`iac/tests/violation/` 加違規測試。
+3. checkov(必要時 tfsec)掃描,沿用 `iac/.checkov.yaml` 的可稽核豁免(SoA)模式,每條豁免附理由。
+
+**驗收標準**:`tofu apply` 能在本機開出可連的 OpenLiberty;checkov 對模組通過,違規範例被擋。
+
+**對應治理控制項**:ISO 27001 Secure by Default;IaC 政策即程式碼(護欄)。
+
+---
+
+#### [TASK-D4] 供應鏈建置 + 簽章(ISMS / 補 supply-chain L4)
+
+**目標**:把 Java 應用建成可驗證來源的容器映像:build → SBOM → SCA 掃描 → cosign 簽章。
+
+**前置條件**:`supply-chain/github/app/backend`(Java/Maven)可建置;cosign 金鑰對已產(私鑰本地保管,絕不進版控)。
+
+**步驟**:
+1. 建置應用容器映像。
+2. 產 SBOM(CycloneDX/SPDX)、跑 SCA 掃描。
+3. `cosign sign` 簽章(金鑰選型見 ADR-0002);公鑰入庫供驗章。
+4. `.gitignore` + gitleaks 確保私鑰不進版控。
+
+**驗收標準**:產出帶 SBOM + 掃描結果 + 有效簽章的映像;私鑰確認未進版控。
+
+**對應治理控制項**:ISO 27001 A.8.28(安全開發/供應鏈);供應鏈完整性。
+
+---
+
+#### [TASK-D5] 部署前驗章閘門(fail-closed)
+
+**目標**:部署前強制驗證,任一不過即拒絕部署並留痕。
+
+**步驟**:
+1. 驗章閘門檢查:`cosign verify` 通過 + SCA 無高風險 + 該 artifact 在 CMDB 有對應 CI。
+2. 設為 fail-closed:任一不過 → 阻擋部署 + 記錄攔截。
+3. 加一個「故意未簽/未登錄」的反例,證明會被擋。
+
+**驗收標準**:已簽且合規的映像放行;未簽/有高風險/未登錄的被擋,留下攔截紀錄。
+
+**對應治理控制項**:ISO 27001 完整性控制;ITIL 發布驗證 / 部署前檢查。
+
+---
+
+#### [TASK-D6] 部署到 OpenLiberty + 煙霧測試(ISO 20000 發布與部署管理)
+
+**目標**:把已驗章的 artifact 部署到 TASK-D3 開出的 OpenLiberty,並驗證可服務。
+
+**步驟**:
+1. 部署映像到 OpenLiberty runtime。
+2. 煙霧測試:打應用端點確認回 200 / 預期回應。
+3. 記錄部署結果(成功/失敗、版本、時間)。
+
+**驗收標準**:應用在 OpenLiberty 上可正常回應;煙霧測試通過並留紀錄。
+
+**對應治理控制項**:ISO 20000 發布與部署管理。
+
+---
+
+#### [TASK-D7] 組態管理(CMDB-as-code)+ 端到端稽核證據
+
+**目標**:把這次部署登錄為組態項目(CI),並把整條鏈串成對映 ISO 的稽核證據。
+
+**步驟**:
+1. 建 `cmdb/` 與 CI schema:應用、版本、artifact digest、簽章、OpenLiberty 實例、環境、關係;加 `scripts/cmdb_validate.py` 與驗證 workflow。
+2. 部署成功後登錄/更新對應 CI(版控即組態基線與變更史)。
+3. 擴充 `scripts/generate_audit_report.py`:把「請求 → PR → 建置/SBOM/掃描/簽章 → 驗章 → 部署 → CMDB」串成一份對映 ISO 控制項的報告。
+
+**驗收標準**:CMDB 正確記錄本次部署的 CI 與關係;能產出涵蓋七階段、每項對映 ISO 編號的端到端證據報告。
+
+**對應治理控制項**:ISO 20000 組態管理;ISO 27001 A.8.9(組態管理)、A.5.36(合規審查);ISO 20000 服務報告。
+
+---
+
 ## 6. Phase Gate(階段關卡檢查)
 
 每階段結束,需確認以下才可進入下一階段:
@@ -278,6 +398,17 @@
 
 > 通過 Gate 1 後,才考慮 Phase 2(Terraform 模組化)。
 > 不要在概念還沒練熟前就跳進 K8s。
+
+### Gate D(Phase D 部署黃金路徑完成檢查)
+- [ ] 能開出服務請求單,且定位為預核准標準變更(TASK-D1)
+- [ ] 請求能轉成合規 PR,無法繞過 PR 觸發部署(TASK-D2)
+- [ ] OpenTofu 能開出預設安全的 OpenLiberty,checkov 通過、違規被擋(TASK-D3)
+- [ ] 應用映像帶 SBOM + 掃描 + cosign 簽章,私鑰未進版控(TASK-D4)
+- [ ] 部署前驗章閘門 fail-closed:未簽/高風險/未登錄被擋(TASK-D5)
+- [ ] 已驗章 artifact 部署上 OpenLiberty 且煙霧測試通過(TASK-D6)
+- [ ] CMDB 登錄本次 CI;能產出涵蓋七階段、對映 ISO 的端到端證據報告(TASK-D7)
+
+> 全數打勾 = 一張服務請求單能自動走到 app 跑在 OpenLiberty 上,且全程可稽核。
 
 ---
 
@@ -308,3 +439,6 @@
 - `COMPLIANCE_MAP.md` — 技術控制 ↔ ISO 27001 / 20000 對照表
 - `GOVERNANCE_BRIEF.md` — 給資安 / 稽核 / 主管的提案說明
 - `CLAUDE.md` — 給 Claude Code 的專案脈絡與執行慣例
+- `docs/golden-path-request-to-deploy.md` — Phase D 部署黃金路徑設計與框架對映
+- `docs/adr/0001-phase2-iac-stack.md` — Phase 2 IaC 技術棧決策
+- `docs/adr/0002-openliberty-runtime-and-deploy.md` — Phase D 執行環境與部署/簽章決策
