@@ -11,6 +11,12 @@
 framework:
   - terraform
 
+# 自訂容器安全政策(CKV_OL_*):checkov 內建沒有 docker_container 的安全檢查,
+# 故把「容器合規基線」寫成自訂政策放 policies/rules/(受 SoD 保護)。
+# 路徑相對於執行 checkov 的目錄(CI 在 repo 根目錄執行)。
+external-checks-dir:
+  - policies/rules
+
 # 故意違規夾具不納入「主閘門」(它本來就該失敗);另有 self-test 證明會被擋,
 # 比照 Phase 1 機敏掃描的違規分支做法。
 skip-path:

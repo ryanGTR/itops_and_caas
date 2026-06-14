@@ -1,0 +1,12 @@
+metadata:
+  id: "CKV_OL_1"
+  name: "OpenLiberty/容器不得以 privileged 執行 (ISO 27001 A.8.27 主機隔離)"
+  category: "GENERAL_SECURITY"
+  severity: "HIGH"
+definition:
+  cond_type: "attribute"
+  resource_types:
+    - "docker_container"
+  attribute: "privileged"
+  operator: "equals"
+  value: false

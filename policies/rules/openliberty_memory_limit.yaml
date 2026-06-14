@@ -1,0 +1,11 @@
+metadata:
+  id: "CKV_OL_4"
+  name: "容器須設記憶體上限 memory (ISO 27001 A.8.6 容量管理 / 可用性)"
+  category: "GENERAL_SECURITY"
+  severity: "MEDIUM"
+definition:
+  cond_type: "attribute"
+  resource_types:
+    - "docker_container"
+  attribute: "memory"
+  operator: "exists"

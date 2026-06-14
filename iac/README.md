@@ -10,12 +10,18 @@
 
 ```
 iac/
-├── modules/secure-bucket/     合規 S3 模組(安全預設焊死)
-├── examples/golden-path/      黃金路徑:開發者怎麼用模組
-├── examples/localstack-smoke/ 對 LocalStack apply 的 smoke test
-├── tests/violation/           故意違規(證明閘門擋得住)
-└── .checkov.yaml              IaC 政策閘門設定(合規基線 + 可稽核豁免)
+├── modules/secure-bucket/        合規 S3 模組(安全預設焊死)
+├── modules/openliberty-service/  合規 OpenLiberty(Podman 容器)模組 ← Phase D / TASK-D3
+├── examples/golden-path/         黃金路徑:開發者怎麼用 S3 模組
+├── examples/openliberty-golden-path/  黃金路徑:怎麼用 OpenLiberty 模組
+├── examples/localstack-smoke/    對 LocalStack apply 的 smoke test
+├── tests/violation/              故意違規(S3 + 容器,證明閘門擋得住)
+└── .checkov.yaml                 IaC 政策閘門設定(合規基線 + 可稽核豁免 + 外掛自訂政策)
 ```
+
+> Phase D 加入容器執行環境模組。checkov 內建沒有 `docker_container` 的安全檢查,
+> 故把「容器合規基線」寫成**自訂政策**放 `policies/rules/`(CKV_OL_1~6,受 SoD 保護),
+> 由 `.checkov.yaml` 的 `external-checks-dir` 載入。詳見 `modules/openliberty-service/README.md`。
 
 ## 合規基線與「可稽核豁免」(SoA 精神)
 
@@ -31,6 +37,7 @@ iac/
 | 封鎖公開存取 | CKV2_AWS_6 / CKV_AWS_20 | A.8.12 / A.5.15 |
 | 版本控制 | CKV_AWS_21 | A.8.13 完整性 |
 | 強制標籤 | 模組 variable validation | A.5.9 / A.5.12 資產/分級 |
+| 容器:非 root / 唯讀根 / drop caps / 禁 privileged / no-new-privileges / 記憶體上限 / 僅綁 127.0.0.1 | CKV_OL_1~6(自訂)+ 模組焊死 | A.8.2 / A.8.27 / A.8.6 / A.8.20 |
 
 ## 怎麼跑(本機驗證,零雲端)
 
@@ -39,10 +46,12 @@ iac/
 checkov -d iac --config-file iac/.checkov.yaml --compact
 
 # 違規 self-test:應有 FAILED(證明擋得住)
-checkov -d iac/tests/violation --compact
+checkov -d iac/tests/violation --external-checks-dir policies/rules --compact
 ```
 
-已驗結果:主閘門 **Passed 12 / Failed 0**;違規 self-test **Failed 8**(被擋)。
+已驗結果(2026-06-14):主閘門 **Passed 29 / Failed 0**(含 OpenLiberty 模組 CKV_OL_1~6 全過);
+容器違規 self-test **6 條 CKV_OL 全 FAILED**(被擋);`tofu validate` 對 OpenLiberty 範例通過。
+`tofu apply` 實跑 OpenLiberty 留到 [TASK-D6]。
 
 ## LocalStack smoke test(選配)
 

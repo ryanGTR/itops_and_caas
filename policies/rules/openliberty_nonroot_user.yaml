@@ -1,0 +1,24 @@
+metadata:
+  id: "CKV_OL_3"
+  name: "容器須以非 root 使用者執行 (ISO 27001 A.8.2 最小權限)"
+  category: "GENERAL_SECURITY"
+  severity: "HIGH"
+definition:
+  and:
+    - cond_type: "attribute"
+      resource_types:
+        - "docker_container"
+      attribute: "user"
+      operator: "exists"
+    - cond_type: "attribute"
+      resource_types:
+        - "docker_container"
+      attribute: "user"
+      operator: "not_equals"
+      value: "root"
+    - cond_type: "attribute"
+      resource_types:
+        - "docker_container"
+      attribute: "user"
+      operator: "not_equals"
+      value: "0"
