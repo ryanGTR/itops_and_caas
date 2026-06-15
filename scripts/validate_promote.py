@@ -52,7 +52,9 @@ import re
 # 目標部署檔:deployments/<env>/<app>.yaml(sig/ 等更深層不算,動到即非 source 範圍)
 TARGET_RE = re.compile(r"^deployments/([^/]+)/([^/]+)\.yaml$")
 # 過版只准搬這些 source 欄位(對齊 promote.py);其餘 source 欄位也不准動。
-PROMOTE_KEYS = {"artifact", "version", "digest", "gitCommit", "gitTag"}
+# testReport/testCount=測試證據,與 digest 同屬「這次 build 的身分」,隨之過版。
+PROMOTE_KEYS = {"artifact", "version", "digest", "gitCommit", "gitTag",
+                "testReport", "testCount"}
 DEFAULT_ORDER = ["openliberty-sandbox", "test", "uat", "prod"]
 
 

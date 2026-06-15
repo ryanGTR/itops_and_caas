@@ -1,0 +1,16 @@
+# 違規夾具:空測試套件(testCount=0,有指紋但沒有任何測試)
+# → 閘門應拒絕(防「綠燈空殼」:跳過/刪光測試讓它假裝通過)。
+apiVersion: golden-path/v1
+kind: DeploymentRequest
+metadata:
+  app: supply-chain-backend
+  environment: openliberty-sandbox
+  requestedBy: developer
+spec:
+  source:
+    artifact: ghcr.io/ryangtr/supply-chain-backend
+    version: v1.0.0
+    digest: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    testReport: "sha256:0c025ecc8cc6c88e94b8338e34b161abb5d2d50627661a6006ea6bc4631f8d55"
+    testCount: 0
+  dataClassification: internal

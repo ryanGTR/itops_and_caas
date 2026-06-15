@@ -4,7 +4,11 @@
 #       用 `uses: ryanGTR/itops_and_caas/.github/workflows/supply-chain-sign.yml@main` 呼叫。
 #       build/sign 在「呼叫端」(app repo)跑;itops 只「定義」這條鏈與信任根。
 #
-# 鏈:build → SBOM(syft) → SCA 掃描(grype) → cosign 簽章 → 輸出 digest
+# 鏈:test(mvn test,沒過/空套件就擋,不產出任何映像)→ build → SBOM(syft)
+#     → SCA 掃描(grype) → cosign 簽章 → 輸出 digest + 測試證據(testCount/testReport)
+#
+# 「測試是護欄」:沒通過測試的程式碼根本 build 不出可簽章的映像,
+# 讓下游「promote what passed test」名副其實(見 scripts/verify_deploy_gate.py 檢查 4)。
 #
 # 對應治理控制項:
 #   - ISO 27001 A.8.28 安全開發 / 供應鏈完整性
@@ -46,6 +50,11 @@ on:
         required: false
         type: string
         default: "high"
+      java_version:
+        description: "build/test 用的 JDK 版本"
+        required: false
+        type: string
+        default: "17"
     secrets:
       registry_username:
         required: true
@@ -59,13 +68,72 @@ on:
       digest:
         description: "已簽章映像的 digest(sha256:...)"
         value: ${{ jobs.build-sign.outputs.digest }}
+      test_count:
+        description: "通過的測試數(test gate 證據;呼叫端回填 DeploymentRequest.source.testCount)"
+        value: ${{ jobs.test.outputs.total }}
+      test_report:
+        description: "測試報告指紋 sha256(回填 source.testReport)"
+        value: ${{ jobs.test.outputs.report }}
 
 permissions:
   contents: read
   packages: write
 
 jobs:
+  # ── 測試閘門(paved road 第一關)──────────────────────────────
+  # 測試「視同程式碼」:沒過 / 空套件即 fail,build-sign 不會啟動 → 無映像可簽。
+  # 對應:ISO 27001 A.8.29 開發與驗收中的安全測試。
+  test:
+    runs-on: ubuntu-latest
+    outputs:
+      total: ${{ steps.evidence.outputs.total }}
+      report: ${{ steps.evidence.outputs.report }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ inputs.java_version }}
+          cache: maven
+
+      - name: Run tests (mvn test)
+        working-directory: ${{ inputs.context }}
+        run: mvn -B test
+
+      - name: Collect & fingerprint test evidence
+        id: evidence
+        working-directory: ${{ inputs.context }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s globstar nullglob
+          xmls=( **/target/surefire-reports/TEST-*.xml )
+          if [ ${#xmls[@]} -eq 0 ]; then
+            echo "::error::找不到 surefire 測試報告——零測試不構成證據(防綠燈空殼),擋。"
+            exit 1
+          fi
+          total=$(grep -ho '<testcase[ >]' "${xmls[@]}" | wc -l)
+          if [ "$total" -lt 1 ]; then
+            echo "::error::測試數為 0——不放行 build。"
+            exit 1
+          fi
+          # 報告指紋:對排序後的 surefire XML 取 sha256,作為可追溯的測試證據。
+          report="sha256:$(cat $(printf '%s\n' "${xmls[@]}" | sort) | sha256sum | cut -d' ' -f1)"
+          echo "total=$total" >> "$GITHUB_OUTPUT"
+          echo "report=$report" >> "$GITHUB_OUTPUT"
+          echo "✅ 測試通過:$total 筆;證據指紋 $report"
+
+      - name: Upload test reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: ${{ inputs.context }}/**/target/surefire-reports/*.xml
+
   build-sign:
+    needs: test          # ★ 測試沒過,build 根本不啟動(無映像可簽)
     runs-on: ubuntu-latest
     outputs:
       digest: ${{ steps.build.outputs.digest }}

@@ -31,8 +31,11 @@ except ImportError:
 
 # 過版只搬這些 source 欄位;其餘(尤其 runtime/config)絕不動。
 # 值的引號樣式對齊 deployments 慣例,確保未變動的欄位零 cosmetic diff。
-PROMOTE_KEYS = ["artifact", "version", "digest", "gitCommit", "gitTag"]
-QUOTED = {"digest", "gitCommit", "gitTag"}
+# testReport/testCount=測試證據,與 digest 同屬「這次 build 的不可分身分」,
+# 必須一起過版——否則目標環境會留著上一個 digest 的舊測試證據(漂白)。
+PROMOTE_KEYS = ["artifact", "version", "digest", "gitCommit", "gitTag",
+                "testReport", "testCount"]
+QUOTED = {"digest", "gitCommit", "gitTag", "testReport"}
 
 
 def fmt(key: str, val: str) -> str:

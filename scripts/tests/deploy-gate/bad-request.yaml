@@ -1,4 +1,5 @@
 # 違規夾具:未建置/未簽章(digest 空)→ 閘門應拒絕(fail-closed)
+# 有測試證據,隔離出「digest 未綁」為唯一失敗點。
 apiVersion: golden-path/v1
 kind: DeploymentRequest
 metadata:
@@ -10,4 +11,6 @@ spec:
     artifact: ghcr.io/ryangtr/rogue-app
     version: v0.0.0
     digest: ""
+    testReport: "sha256:0c025ecc8cc6c88e94b8338e34b161abb5d2d50627661a6006ea6bc4631f8d55"
+    testCount: 3
   dataClassification: internal

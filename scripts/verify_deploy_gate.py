@@ -11,9 +11,15 @@
      - 正式部署(TASK-D6):改用 `cosign verify --key trust/cosign.pub <image>@<digest>`。
   3. 組態登錄(CMDB):DeploymentRequest 必要欄位齊全(app/environment/requestedBy)。
      TASK-D7 接真正的 cmdb/ 後,改查 CI 是否存在。
+  4. 測試證據(test gate):spec.source.testReport 須為有效 sha256 指紋、testCount>=1。
+     「promote what passed test」的根據——沒測試證據 / 空套件,一律拒絕。
+     (測試「沒過」在 paved-road test job 就會讓 pipeline 失敗、不產出 digest/簽章。)
+     此檢查在「初次部署」與「每次過版(F3 委派本閘門重驗)」都會跑,
+     所以「沒通過測試的產物」既部署不上去、也過不了版。
 
 對應治理控制項:
-  ISO 27001 完整性控制 / A.8.28 供應鏈;ITIL 發布驗證 / 部署前檢查。
+  ISO 27001 完整性控制 / A.8.28 供應鏈;A.8.29 開發與驗收中的安全測試;
+  ITIL 發布驗證 / 部署前檢查。
 
 用法:
   verify_deploy_gate.py --request <req.yaml> --signature <sig> [--pubkey trust/cosign.pub]
@@ -69,6 +75,31 @@ def main() -> int:
     if missing:
         reject("ISO 20000 組態管理", f"DeploymentRequest 缺必要欄位:{', '.join(missing)}")
 
+    # --- 檢查 4(也便宜,純 YAML):測試證據(test gate)---
+    # 「promote what passed test」的根據。扁平欄位(testReport/testCount),
+    # 與 gitCommit/gitTag 同層,可隨 digest 一起過版(promote.py 逐行搬移)。
+    # 註:測試「沒過」在 paved-road test job 階段就會讓 pipeline 失敗 → 根本不會產出
+    #     digest / 簽章,故能走到本閘門的 artifact 必然「測試已過」;此處再驗
+    #     「證據存在、非空、可追溯」,fail-closed 擋掉缺證據 / 空套件 / 指紋無效。
+    test_report = str(source.get("testReport", "") or "")
+    if not DIGEST_RE.match(test_report):
+        reject(
+            "ISO 27001 A.8.29 開發中測試",
+            f"缺有效測試證據指紋(source.testReport={test_report!r})——需為 "
+            "sha256:<64 hex>(surefire 報告 / 測試 attestation 雜湊)。"
+            "無測試證據 → 「promote what passed test」前提不成立,不可部署/過版。",
+        )
+    try:
+        test_count = int(source.get("testCount", 0))
+    except (TypeError, ValueError):
+        test_count = 0
+    if test_count < 1:
+        reject(
+            "ISO 27001 A.8.29 開發中測試",
+            f"測試套件為空(source.testCount={source.get('testCount')!r})——"
+            "空套件不構成證據(防「綠燈空殼」:跳過/刪光測試假裝通過),不可部署/過版。",
+        )
+
     # --- 檢查 1:不可變 digest ---
     digest = str(source.get("digest", "") or "")
     if not DIGEST_RE.match(digest):
@@ -112,7 +143,8 @@ def main() -> int:
         )
 
     print(f"✅ 驗章通過,放行部署:{meta['app']} → {meta['environment']}  ({digest})")
-    print("   通過:digest 不可變 + 簽章有效(本平台信任根)+ 組態欄位齊全。")
+    print("   通過:digest 不可變 + 簽章有效(本平台信任根)+ 組態欄位齊全"
+          f" + 測試證據齊全({test_count} 筆)。")
     return 0
 
 
