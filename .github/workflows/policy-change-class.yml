@@ -1,0 +1,38 @@
+# 護欄:變更分類驗證 (TASK-E1)
+#
+# 例外路徑(急件/插單/補單)的地基:每個 DeploymentRequest 必須帶合法變更分類,
+# 例外型別要附理由、插單要留授權,且**任一 changeType 都不可關閉安全閘門**
+# (簽章/掃描/驗章對急件一樣強制)。每個 PR 重跑驗證 + fail-closed self-test。
+#
+# 對應治理控制項:ISO 27001 A.8.32 變更管理、A.8.28 完整性、A.5.3 職責分離。
+
+name: policy-change-class
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  change-class:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: 驗證變更分類
+        run: python3 scripts/validate_change_class.py
+
+      - name: 變更分類 self-test(fail-closed)
+        run: bash scripts/tests/change-class/selftest.sh
