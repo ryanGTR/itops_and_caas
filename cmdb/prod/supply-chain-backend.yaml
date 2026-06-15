@@ -4,10 +4,10 @@
 apiVersion: cmdb/v1
 kind: ConfigurationItem
 metadata:
-  ciId: ci-supply-chain-backend-openliberty-sandbox
+  ciId: ci-supply-chain-backend-prod
   type: deployed-application
   app: supply-chain-backend
-  environment: openliberty-sandbox
+  environment: prod
 spec:
   source:
     artifact: localhost/supply-chain-backend
@@ -17,24 +17,24 @@ spec:
     gitTag: v0.0.0-EXAMPLE
     testReport: sha256:13c01fb542dc0f6728824f6e9f7a4c66e3e7f0b36dab75ad8cd42422dd414349
     testCount: 3
-    signature: deployments/openliberty-sandbox/sig/supply-chain-backend.sig
+    signature: deployments/prod/sig/supply-chain-backend.sig
   runtime:
     type: openliberty
     instance: supply-chain-backend
-    url: http://127.0.0.1:9080
-    httpPort: 9080
+    url: http://127.0.0.1:9083
+    httpPort: 9083
   provenance:
-    serviceRequest: '#34'
+    serviceRequest: '#0'
     requestedBy: developer
-    deploymentRequest: deployments/openliberty-sandbox/supply-chain-backend.yaml
+    deploymentRequest: deployments/prod/supply-chain-backend.yaml
     gate: passed
-    deployedAt: '2026-06-15T12:06:08Z'
+    deployedAt: '2026-06-15T13:58:14Z'
     result: success
-  dataClassification: internal
+  dataClassification: confidential
   relationships:
   - type: deployed-from
-    target: deployments/openliberty-sandbox/supply-chain-backend.yaml
+    target: deployments/prod/supply-chain-backend.yaml
   - type: signed-by
     target: trust/cosign.pub
   - type: runs-on
-    target: openliberty-sandbox
+    target: prod

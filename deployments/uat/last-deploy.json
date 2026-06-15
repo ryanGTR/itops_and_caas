@@ -1,10 +1,10 @@
 {
   "app": "supply-chain-backend",
-  "environment": "test",
+  "environment": "uat",
   "image": "localhost/supply-chain-backend:b1",
   "digest": "sha256:707f88c2ef9be6f4001f93b494b8db2a7e0fb997a4e293f60f3cd4a8ac020b77",
-  "httpPort": 9081,
-  "deployedAt": "2026-06-15T13:56:21Z",
+  "httpPort": 9082,
+  "deployedAt": "2026-06-15T13:56:25Z",
   "gate": "passed",
   "integrityCheck": "deployed-image == verified-digest",
   "smokeTest": {

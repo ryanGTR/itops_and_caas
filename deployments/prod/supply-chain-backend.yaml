@@ -13,14 +13,14 @@ metadata:
 spec:
   source:                       # ★ 三區完全相同——同一個已驗章的產物
     artifact: localhost/supply-chain-backend
-    version: d6
-    digest: "sha256:98a5ba98f42739af7dad598132ae90506bdc2bd2f0c2ec805d0d4d67735f3e7a"
+    version: b1
+    digest: "sha256:707f88c2ef9be6f4001f93b494b8db2a7e0fb997a4e293f60f3cd4a8ac020b77"
     gitCommit: "def4567"        # 血統:源碼 commit(範例值;真實由 D4 build 帶入 github.sha)
     gitTag: "v0.0.0-EXAMPLE"    # 發布 tag(範例值;人用 tag 挑、系統用 digest 釘)
-    testReport: "sha256:0c025ecc8cc6c88e94b8338e34b161abb5d2d50627661a6006ea6bc4631f8d55"  # 測試證據指紋(隨 digest 過版)
+    testReport: "sha256:13c01fb542dc0f6728824f6e9f7a4c66e3e7f0b36dab75ad8cd42422dd414349"  # 測試證據指紋(隨 digest 過版)
     testCount: 3                # 測試數(test gate:>=1)
   dataClassification: confidential     # 隨環境(prod 較高)
   runtime:                      # ★ 隨環境不同的 config(image 不變)
     type: openliberty
-    httpPort: 9080
+    httpPort: 9083              # 各區獨立埠(sandbox 9080/test 9081/uat 9082/prod 9083),四台可同時跑
     contextRoot: /

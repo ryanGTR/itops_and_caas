@@ -28,7 +28,7 @@ spec:
     requestedBy: developer
     deploymentRequest: deployments/test/supply-chain-backend.yaml
     gate: passed
-    deployedAt: '2026-06-15T12:16:52Z'
+    deployedAt: '2026-06-15T13:56:21Z'
     result: success
   dataClassification: internal
   relationships:
