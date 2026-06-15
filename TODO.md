@@ -6,7 +6,7 @@
 
 ## 🔄 如何接續(斷 session / 換 session 都適用)
 
-1. **讀 Claude 跨 session 記憶**:`~/.claude/projects/-home-ryan/memory/MEMORY.md` → 點進 `itops-caas-idp-poc.md`(完整脈絡、每階段決策、踩過的雷、教訓)。新 session 開場讀這兩個就能無縫接。
+1. **讀 repo 內的接續狀態**:[`docs/session-handoff.md`](docs/session-handoff.md)——現在到哪、活著的東西、關鍵決策、踩過的雷、操作慣例。**這份在 repo 裡,不依賴任何外部記憶**(光靠 git repo 就能接續)。(Claude 的跨 session 記憶 `~/.claude/.../memory/` 是補充,但 repo 自己已自足。)
 2. **看真實進度,別只信文件**:`git log --oneline -20`、本檔的勾選狀態、`docs/*-evidence.html` / `governance-console.html` / `cmdb-topology.html`。
 3. **驗證當前狀態可跑**:
    ```bash
