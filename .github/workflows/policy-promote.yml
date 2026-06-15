@@ -1,0 +1,59 @@
+# 護欄:過版閘門 policy-promote (TASK-F3)
+#
+# 對「過版 PR」(把上一區已驗章 digest 推進下一區)強制三道守衛,任一不過即擋:
+#   1. Diff 範圍守衛:只准動目標環境 spec.source(夾帶 config/他檔 → 擋)。
+#   2. 血統+順序守衛:digest 必須存在於「上一區」CMDB 確認態(禁跳關)。
+#   3. 重新驗章:對目標環境重跑 D5 部署前驗章閘門(同 digest 用上一區簽章)。
+# 非過版 PR 自動 no-op 放行,故本檢查可安全列為必過狀態檢查。
+#
+# ⚠️ 此為護欄變更,需資安審核(SoD)。
+# 對應治理控制項:ISO 27001 A.8.28 完整性 / A.8.32 變更管理;ISO 20000 發布驗證。
+
+name: policy-promote
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  promote-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout(完整歷史,供 diff base)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      # PR:驗證本分支相對 base 的變更是否為合規過版
+      - name: 過版閘門(PR 變更驗證)
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: origin/${{ github.event.pull_request.base.ref }}
+          HEAD_REF: ${{ github.head_ref }}
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+        run: |
+          set -euo pipefail
+          flag=""
+          # 由 promote workflow(F2)開的分支 promote/* 或帶 promote 標籤 → 從嚴判定為過版 PR
+          case "$HEAD_REF" in promote/*) flag="--promote-pr" ;; esac
+          case ",$LABELS," in *,promote,*) flag="--promote-pr" ;; esac
+          python3 scripts/validate_promote.py --base "$BASE" $flag
+
+      # 反例 self-test(夾帶 / 跳關 / 偽造皆被擋)— 每個 PR / push 都重跑
+      - name: 過版閘門 self-test(fail-closed)
+        run: bash scripts/tests/promote-gate/selftest.sh

@@ -581,7 +581,6 @@
 **驗收標準**:正式過版留下獨立核准軌跡;revert 能可靠回退到前一版並留痕。
 
 **對應治理控制項**:ISO 27001 A.5.3 SoD;ISO 20000 變更管理(回退)。
-||||||| aa135ca
 
 ---
 
@@ -622,11 +621,10 @@
 ### Gate F(Phase F 多環境晉級與過版完成檢查)
 - [x] 同一 digest 能在 test/uat/prod 各自部署(tofu validate 通過)、config 隨區不同(TASK-F1)
 - [x] promote 生成器能開出「只改目標環境 source.digest」的過版 PR,留痕完整(TASK-F2)
-- [ ] policy-promote 擋住跳關 / 夾帶私貨 / 未驗章,合規過版放行(TASK-F3)
+- [x] policy-promote 擋住跳關 / 夾帶私貨 / 未驗章,合規過版放行(TASK-F3)
 - [ ] 正式過版需變更權責者核准;git revert 能可靠回退並留痕(TASK-F4)
 
 > 全數打勾 = build 一次的產物能逐區安全晉級,過版即 PR 即留痕,正式需核准、可回退。
-||||||| aa135ca
 
 ---
 
@@ -675,4 +673,3 @@
 - `docs/multi-env-promotion.md` — Phase F 多環境晉級與過版藍圖(build once, promote)
 - `docs/provenance-and-identifiers.md` — branch/tag/commit SHA/digest 識別子與血統(觀念參考)
 - `docs/adr/0004-multi-env-promotion.md` — Phase F 多環境晉級與過版決策
-||||||| aa135ca
