@@ -10,9 +10,9 @@ metadata:
   requestedBy: developer        # SoD：請求者角色（ISO 27001 A.5.3）
 spec:
   source:
-    artifact: ghcr.io/ryangtr/supply-chain-backend   # 範例假值
-    version: v0.0.0-EXAMPLE                            # 範例假值
-    digest: ""                                         # D4 簽章後回填 sha256:...
+    artifact: localhost/supply-chain-backend           # D6 本機實跑:podman build 的真實映像
+    version: d6                                         # 本次部署的版本 tag
+    digest: "sha256:98a5ba98f42739af7dad598132ae90506bdc2bd2f0c2ec805d0d4d67735f3e7a"  # D4 簽章後回填(對應 sig/supply-chain-backend.sig)
   dataClassification: internal   # 模擬分級（非真實機密分級）
   runtime:
     type: openliberty

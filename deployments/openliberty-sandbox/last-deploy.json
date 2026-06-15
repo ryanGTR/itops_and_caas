@@ -1,0 +1,15 @@
+{
+  "app": "supply-chain-backend",
+  "environment": "openliberty-sandbox",
+  "image": "localhost/supply-chain-backend:d6",
+  "digest": "sha256:98a5ba98f42739af7dad598132ae90506bdc2bd2f0c2ec805d0d4d67735f3e7a",
+  "httpPort": 9080,
+  "deployedAt": "2026-06-15T00:58:03Z",
+  "gate": "passed",
+  "integrityCheck": "deployed-image == verified-digest",
+  "smokeTest": {
+    "health": "GET /health",
+    "business": "GET /api/products"
+  },
+  "result": "success"
+}

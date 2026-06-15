@@ -405,7 +405,7 @@
 - [ ] OpenTofu 能開出預設安全的 OpenLiberty,checkov 通過、違規被擋(TASK-D3)
 - [ ] 應用映像帶 SBOM + 掃描 + cosign 簽章,私鑰未進版控(TASK-D4)
 - [ ] 部署前驗章閘門 fail-closed:未簽/高風險/未登錄被擋(TASK-D5)
-- [ ] 已驗章 artifact 部署上 OpenLiberty 且煙霧測試通過(TASK-D6)
+- [x] 已驗章 artifact 部署上 OpenLiberty 且煙霧測試通過(TASK-D6)
 - [ ] CMDB 登錄本次 CI;能產出涵蓋七階段、對映 ISO 的端到端證據報告(TASK-D7)
 
 > 全數打勾 = 一張服務請求單能自動走到 app 跑在 OpenLiberty 上,且全程可稽核。
@@ -446,5 +446,6 @@
 - `docs/supply-chain-signing.md` — 供應鏈 build/SBOM/掃描/簽章（TASK-D4）
 - `trust/README.md` — 簽章信任根（cosign 公鑰）
 - `docs/deploy-gate.md` — 部署前驗章閘門 fail-closed（TASK-D5）
+- `docs/deploy-to-openliberty.md` — 部署到 OpenLiberty + 煙霧測試（TASK-D6）
 - `docs/adr/0001-phase2-iac-stack.md` — Phase 2 IaC 技術棧決策
 - `docs/adr/0002-openliberty-runtime-and-deploy.md` — Phase D 執行環境與部署/簽章決策
