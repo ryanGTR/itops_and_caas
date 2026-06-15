@@ -1,0 +1,56 @@
+---
+title: Session 接續狀態(repo 自足的 handoff)
+type: handoff
+updated: 2026-06-16
+---
+
+# Session 接續狀態 — repo 自足版
+
+> 這份把「原本只在 Claude 跨 session 記憶裡」的脈絡/決策/踩雷,固化進 **repo 本身**。
+> 目的:**不依賴任何外部記憶**,光靠這個 git repo 就能讓任何人 / 任何工具 / 任何新 session 接續。
+> 搭配 [`TODO.md`](../TODO.md)(待辦 + 操作步驟)一起看。
+
+## 1. 現在到哪了(2026-06-16)
+
+itops 從「治理 PoC」做成「真被用、看得到、可治理的活系統」。本波 PR #28~#40 全合進 main:
+- **測試 gate**(兩層 fail-closed)、**真 live 端到端**(四環境同 digest、build once promote)
+- **收口**:COMPLIANCE_MAP 補 D/E/F、`docs/case-study.md`、`docs/everything-as-code-journey.md`
+- **真整合**:`integration/`(supply-chain build/test/sign → handoff manifest → itops 驗章/部署/CMDB)
+- **可視化**:`docs/governance-console.html`(後台)、`scripts/ticket_trace.py`(單據鑽取)、`docs/cmdb-topology.html`
+- **真 VM 部署目標**:`scripts/deploy_openliberty_vm.sh` + `iac/environments/vm-openliberty/`(OpenTofu→QEMU VM→OpenLiberty)
+- **CMDB 多層拓樸**:`cmdb_register/validate/topology.py`(host→middleware→software,15 CI)
+
+## 2. 現在「活著」的東西(實際狀態,別只信文件)
+
+- **一台 QEMU VM `itops-ol-vm` 還跑著**:OpenLiberty 上 app 服務於 `192.168.122.180:9080`(/health UP)。
+  收掉:`tofu -chdir=iac/environments/vm-openliberty destroy -auto-approve`。
+- podman 容器已清空。`git status` 應乾淨。
+
+## 3. 關鍵設計決策(為什麼這樣做)
+
+- **護欄不是閘門 / build once promote / 鬆綁審核不鬆綁護欄 / 補單≠漂白 / fail-closed**(招牌論述,見 case-study)。
+- **itops 與 supply-chain 各司其職**:supply-chain = 左側(掃描/簽章);itops = 右側部署治理(驗章/promote/CMDB/變更)。靠 handoff manifest 串,**不互相重做**。
+- **CMDB 是 CI + 關係拓樸**(host→middleware→software);itops 版賣點在 as-code + 版控,但**仍非真企業 CMDB**(無網路/DB/服務依賴、無 discovery)。
+- 部署目標:podman 容器 → 真 QEMU VM(更貼近銀行「部署到主機」)。
+
+## 4. 踩過的雷(再做別重踩)
+
+- **btrfs + qcow2 雙重 CoW 會開機 I/O 卡死**:映像目錄 `chattr +C`(No_COW);輕量單 VM 不觸發,重負載才需要。(= k8s-lab 同款雷)
+- **dmacvicar/libvirt provider 0.9.x 是低階 XML API**,不相容友善寫法 → **釘 0.7.6**。
+- **缺 mkisofs** → `pacman -S cdrtools`。
+- **qemu:///session 在此機 daemon 佈局不順** → 用 `qemu:///system + default pool`(root 讀家目錄 base image)。
+- **VM→host TCP 被 libvirt 擋** → 推檔走 **SSH/scp host→VM**(正常方向)。
+- **zsh 不對未引用變數分詞** → ssh `-o` 旗標要 inline,別塞變數。
+- **WAR 是 Java 21 編譯、VM 預設 Java 17**(class 65 vs 61)→ 裝 Temurin 21。
+- **多層 CMDB 後 self-test 用 `next(rglob)` 可能抓到 host CI**(無 source/runtime)→ 過濾 `type==deployed-application`。
+- **加新 required check 順序雷**:該 check 的 workflow 要先在 main 才能設 required。
+- token/密鑰一律走環境變數/keyring,別貼對話、別進 commit。
+
+## 5. 怎麼接著做
+
+見 [`TODO.md`](../TODO.md):A 收口 → B supply-chain L4 真整合(主線,計畫在 `~/Documents/supply-chain/itops-l4-integration-plan.md`)→ C 補強 → D 清理。
+驗證當前可跑:`scripts/cmdb_validate.py`、`scripts/tests/*/selftest.sh`、`git log`。
+
+## 6. 操作慣例
+
+逐項做 → 開分支 → PR → **7 道必過檢查綠**(policy-secrets/structure/iac、cmdb-validate、deploy-gate-selftest、change-class、promote-gate)→ squash 合併。護欄變更(policies/、workflows/、scripts 閘門)PR 標「需資安審核(SoD)」。`main` 禁直接 push。
