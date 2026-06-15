@@ -36,3 +36,6 @@ jobs:
 
       - name: CMDB 驗證器 self-test(fail-closed)
         run: bash scripts/tests/cmdb/selftest.sh
+
+      - name: 漂移對帳 self-test(TASK-E4)
+        run: bash scripts/tests/reconcile/selftest.sh
