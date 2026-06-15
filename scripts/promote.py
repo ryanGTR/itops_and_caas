@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import shutil
 import sys
 from pathlib import Path
 
@@ -52,7 +53,9 @@ def surgical_update(text: str, new: dict) -> tuple[str, dict]:
         stripped = line.lstrip()
         indent = len(line) - len(stripped)
         # 進入 / 離開 spec.source 區塊(以縮排判定)
-        if re.match(r"^\s*source:\s*$", line):
+        # 允許 source: 行尾帶註解(真實 deployments 檔的 source: 常有說明註解;
+        # 早期只比對 `source:$` 會漏進區塊 → 過版「無變更」。真 live 才抓到的雷)。
+        if re.match(r"^\s*source:\s*(#.*)?$", line):
             in_source = True
             src_indent = indent
             out.append(line)
@@ -109,6 +112,16 @@ def main() -> int:
     updated, changes = surgical_update(tgt_path.read_text(encoding="utf-8"), new)
     tgt_path.write_text(updated, encoding="utf-8")
 
+    # 簽章一起過版:build once → 同一 digest → 同一簽章。目標環境的部署閘門 / CMDB
+    # 驗證需要該環境目錄下有簽章物證,故把來源環境的 .sig 複製過去(內容相同)。
+    sig_note = ""
+    src_sig = Path(args.deployments_dir) / args.src / "sig" / f"{args.app}.sig"
+    if src_sig.is_file():
+        dst_sig = Path(args.deployments_dir) / args.dst / "sig" / f"{args.app}.sig"
+        dst_sig.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src_sig, dst_sig)
+        sig_note = f"  簽章物證:已複製 {src_sig} → {dst_sig}(同 digest 同簽章)。"
+
     print(f"▶ 過版:{args.src} → {args.dst}  ({args.app})")
     print(f"  來源(CMDB 確認態):{ci_path}")
     print(f"  目標(只改 source):{tgt_path}")
@@ -118,6 +131,8 @@ def main() -> int:
     else:
         print("  • 無變更(目標已與來源同步)")
     print("  config / runtime 未動(promotion 只搬 artifact 身分,不搬設定)。")
+    if sig_note:
+        print(sig_note)
     return 0
 
 

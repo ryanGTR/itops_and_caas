@@ -62,6 +62,12 @@ PY
 )
 IMAGE="${ARTIFACT}:${VERSION}"
 SOCKET="unix:///run/user/$(id -u)/podman/podman.sock"
+# 環境目錄由請求的 environment 推導(支援多環境真部署:test/uat/prod,不再寫死 sandbox)。
+ENV_DIR="iac/environments/${ENVIRONMENT}"
+if [ ! -d "$ENV_DIR" ]; then
+  echo "✗ 找不到環境的 IaC 目錄:$ENV_DIR(請確認 TASK-F1 多環境骨架已建)" >&2
+  exit 2
+fi
 echo "  部署標的:$APP → $ENVIRONMENT"
 echo "  映像:$IMAGE  (已驗 digest:$DIGEST)"
 
@@ -70,16 +76,22 @@ echo "  映像:$IMAGE  (已驗 digest:$DIGEST)"
 # ─────────────────────────────────────────────────────────────
 say "[2/5] OpenTofu apply(預設安全的 OpenLiberty 容器)"
 tofu -chdir="$ENV_DIR" init -input=false -upgrade >/dev/null
-tofu -chdir="$ENV_DIR" apply -input=false -auto-approve \
-  -var "image=$IMAGE" \
-  -var "http_port=$HTTP_PORT" \
-  -var "podman_socket=$SOCKET"
+# image 一律注入;http_port 只在該環境「有宣告該變數」時才傳——
+# sandbox 把 port 設成變數(彈性),test/uat/prod 把 config 焊在模組內(config 隨區),
+# 後者不宣告 http_port,硬傳會報 undeclared variable(真 live 才抓到的多環境介面雷)。
+APPLY_VARS=(-var "image=$IMAGE" -var "podman_socket=$SOCKET")
+if grep -rqs 'variable "http_port"' "$ENV_DIR"/*.tf; then
+  APPLY_VARS+=(-var "http_port=$HTTP_PORT")
+fi
+tofu -chdir="$ENV_DIR" apply -input=false -auto-approve "${APPLY_VARS[@]}"
 
 # ─────────────────────────────────────────────────────────────
 # 完整性閉環:跑起來的容器 == D5 驗過的 digest
 # ─────────────────────────────────────────────────────────────
 say "[3/5] 完整性閉環檢查(部署的映像 == 驗章的 digest)"
-RUNNING_ID="sha256:$(podman inspect "$APP" --format '{{.Image}}' 2>/dev/null | sed 's/^sha256://')"
+# 容器名取自 tofu output(多環境容器名為 <app>-<env>,不能假設等於 $APP)。
+CONTAINER="$(tofu -chdir="$ENV_DIR" output -raw container_name 2>/dev/null || echo "$APP")"
+RUNNING_ID="sha256:$(podman inspect "$CONTAINER" --format '{{.Image}}' 2>/dev/null | sed 's/^sha256://')"
 if [ "$RUNNING_ID" != "$DIGEST" ]; then
   echo "✗ 完整性失敗:跑起來的映像($RUNNING_ID)≠ 驗章 digest($DIGEST)。" >&2
   echo "  視為部署失敗,請排查。" >&2
@@ -115,7 +127,7 @@ smoke /api/products  "業務端點(可服務)"        || SMOKE_OK=false
 say "[5/5] 記錄部署結果(部署證據留痕)"
 TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 RESULT=$([ "$SMOKE_OK" = true ] && echo success || echo failed)
-RECORD="deployments/openliberty-sandbox/last-deploy.json"
+RECORD="deployments/${ENVIRONMENT}/last-deploy.json"
 cat > "$RECORD" <<JSON
 {
   "app": "${APP}",

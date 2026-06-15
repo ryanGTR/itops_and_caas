@@ -49,15 +49,18 @@ resource "docker_container" "this" {
     }
   }
 
-  # 僅綁回環位址,不對外曝險
+  # 僅綁回環位址,不對外曝險。
+  # internal 固定 9080:OpenLiberty 在容器內永遠聽 9080(base image 的 open-default-port);
+  # 只有 host 埠(external)隨環境變。早期 internal=var.http_port,sandbox 用 9080 剛好矇對,
+  # 但 test/uat/prod 用 9081/9082/... 時容器內沒人聽該埠 → 服務不可達(真 live 才抓到)。
   ports {
-    internal = var.http_port
+    internal = 9080
     external = var.http_port
     ip       = "127.0.0.1"
   }
 
   healthcheck {
-    test         = ["CMD", "curl", "-f", "http://localhost:${var.http_port}/health"]
+    test         = ["CMD", "curl", "-f", "http://localhost:9080/health"]
     interval     = "30s"
     timeout      = "5s"
     retries      = 3
