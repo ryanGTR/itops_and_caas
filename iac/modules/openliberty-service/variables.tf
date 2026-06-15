@@ -54,6 +54,10 @@ variable "writable_paths" {
     "/opt/ol/wlp/output",
     "/opt/ol/wlp/usr/servers/defaultServer/workarea",
     "/logs",
+    # OpenLiberty 官方映像啟動時會把預設 keystore.xml 寫進 configDropins/defaults
+    # (importKeyCert)。唯讀根檔系統下這會失敗導致容器 exit;掛 tmpfs 讓它可寫但不落地,
+    # 既保住「根檔系統唯讀」基線,又讓映像能正常啟動。
+    "/config/configDropins/defaults",
   ]
 }
 
