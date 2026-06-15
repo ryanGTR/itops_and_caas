@@ -3,7 +3,7 @@ title: ADR-0004 多環境晉級與過版：build once, promote the same digest
 type: adr
 created: 2026-06-15
 updated: 2026-06-15
-status: proposed
+status: accepted
 tags: [phase-f, promotion, multi-env, release, gitops, change-management, iso27001, iso20000]
 ---
 
@@ -62,7 +62,7 @@ tags: [phase-f, promotion, multi-env, release, gitops, change-management, iso270
 
 ## 核准與執行
 
-本 ADR 目前 **proposed**。待 Ryan 審核 `docs/multi-env-promotion.md` 與本 ADR 後改 **accepted**,再依 `PROJECT_PLAN.md` Phase F 逐 TASK 執行。
+本 ADR 已 **accepted**(2026-06-15,Ryan 審核藍圖與本 ADR 後核准)。依 `PROJECT_PLAN.md` Phase F 逐 TASK 執行(F1 多環境骨架起)。
 
 ## See Also
 - `docs/multi-env-promotion.md`（藍圖）
