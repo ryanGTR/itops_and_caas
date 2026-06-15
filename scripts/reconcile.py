@@ -89,6 +89,10 @@ def main() -> int:
         ci = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
         if ci.get("kind") != "ConfigurationItem":
             continue
+        # 只對帳 software 層(有 digest+running 實例);host/middleware 層非「跑著的映像」,跳過。
+        # 向後相容:舊 CI 無 metadata.type 視為 software。
+        if (ci.get("metadata", {}) or {}).get("type", "deployed-application") != "deployed-application":
+            continue
         spec = ci.get("spec", {}) or {}
         expected = str((spec.get("source", {}) or {}).get("digest", "") or "")
         rt = spec.get("runtime", {}) or {}
