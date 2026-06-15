@@ -51,17 +51,22 @@ write("badtype", {"changeType": "yolo"})
 # C: 插單缺 by/reason
 write("badexpedite", {"expedite": {"reason": "急"}})
 # D: 繞過旗標(試圖關閉驗章)
-write("bypass", {"changeType": "emergency", "justification": "prod down"},
+write("bypass", {"changeType": "emergency", "justification": "prod down",
+                 "pir": {"owner": "oncall", "dueBy": "2026-06-20"}},
       {"skipVerify": True})
-# E: 急件附理由 → 合法
-write("okemerg", {"changeType": "emergency", "justification": "prod incident #42"})
+# E: 急件缺 PIR 承諾(TASK-E2)
+write("nopir", {"changeType": "emergency", "justification": "prod incident #42"})
+# F: 急件附理由 + PIR 承諾 → 合法
+write("okemerg", {"changeType": "emergency", "justification": "prod incident #42",
+                  "pir": {"owner": "oncall", "dueBy": "2026-06-20"}})
 PY
 
 check 1 "急件缺 justification → 拒絕"        --deployments-dir "$TMP/noreason"
 check 1 "非法 changeType → 拒絕"             --deployments-dir "$TMP/badtype"
 check 1 "插單缺 by/reason → 拒絕"            --deployments-dir "$TMP/badexpedite"
 check 1 "繞過旗標(skipVerify)→ 拒絕"        --deployments-dir "$TMP/bypass"
-check 0 "急件附 justification → 通過"        --deployments-dir "$TMP/okemerg"
+check 1 "急件缺 PIR 承諾 → 拒絕"             --deployments-dir "$TMP/nopir"
+check 0 "急件附 justification + PIR → 通過"  --deployments-dir "$TMP/okemerg"
 
 echo
 if [ "$FAILED" -ne 0 ]; then

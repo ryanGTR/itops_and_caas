@@ -1,0 +1,58 @@
+# 急件事後回顧(PIR)自動開單 — TASK-E2
+#
+# 急件(changeType: emergency)走「先做後審」。當這類變更**合併進 main** 後,
+# 本 workflow 自動為「這次 push 改動到的 emergency DeploymentRequest」開一張 PIR issue,
+# 帶請求裡承諾的 owner 與 dueBy——確保「先做」之後,「後審」一定被建立、有到期、可追蹤。
+#
+# 與 gate 的分工(時序):
+#   - PR 階段:policy-change-class 強制 emergency 必附 pir{owner,dueBy}(承諾)。
+#   - 合併後(本檔):用那個承諾自動開 PIR issue(履行)。
+#   - 之後(E3):稽核報告統計 PIR 完成率。
+#
+# 對應治理控制項:ISO 27001 A.8.32 緊急變更、A.5.36 事後合規審查。
+
+name: emergency-pir
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "deployments/**"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  open-pir:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2   # 需與上一個 commit 對 diff
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: 為這次合併的 emergency 變更開 PIR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          # 只看「這次 push 改動到」的 DeploymentRequest(天然去重:沒再動就不重開)
+          changed=$(git diff --name-only "${SHA}~1" "${SHA}" -- 'deployments/**/*.yaml' || true)
+          if [ -z "${changed}" ]; then
+            echo "本次無 deployments/*.yaml 變動,略過。"; exit 0
+          fi
+          for f in ${changed}; do
+            [ -f "${f}" ] || continue   # 被刪除的檔跳過
+            echo "檢查 ${f}…"
+            python3 scripts/open_pir.py --request "${f}" --commit "${SHA}" --create
+          done

@@ -1,0 +1,54 @@
+name: 部署後回顧（PIR｜Post-Implementation Review）
+description: 急件(emergency)變更的事後強制回顧。由 emergency-pir workflow 自動開,或手動補。
+title: "[PIR] <app> @ <env> — 急件事後回顧"
+labels: ["pir", "emergency"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > **這是急件的事後審查(TASK-E2)。** 急件走「先做後審」,本回顧是「後審」那一半,**強制、有到期**。
+        > 對應 ISO 27001 A.8.32(緊急變更)、A.5.36(事後合規審查)。關閉本 issue 前請填完下列各欄。
+  - type: input
+    id: deployment
+    attributes:
+      label: 關聯部署(DeploymentRequest / digest / commit)
+      description: 哪一次急件部署(app / 環境 / image digest / 源碼 commit SHA)。
+      placeholder: "supply-chain-backend @ prod / sha256:… / commit def456"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: 做了什麼變更
+      description: 這次急件實際改了什麼、為何當下等不了正常核准。
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: 影響與風險
+      description: 對服務 / 客戶 / 資安的影響;當下承擔了哪些風險。
+    validations:
+      required: true
+  - type: textarea
+    id: rootcause
+    attributes:
+      label: 根因
+      description: 為什麼會需要這次急件?(問題的根因,不是症狀)
+    validations:
+      required: true
+  - type: textarea
+    id: followup
+    attributes:
+      label: 後續行動(矯正措施)
+      description: 要做什麼讓「下次不必再走急件」;含負責人與時程。
+    validations:
+      required: true
+  - type: input
+    id: gates
+    attributes:
+      label: 安全閘門確認
+      description: 確認急件仍通過簽章/掃描/驗章(急件不鬆綁護欄)。
+      placeholder: "cosign 驗章 ✅ / SCA ✅ / deploy gate ✅"
+    validations:
+      required: true

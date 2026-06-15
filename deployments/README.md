@@ -34,6 +34,7 @@ deployments/
 | `metadata.priority` | 優先序 `P1..P4`（插單用） | E1 |
 | `metadata.justification` | 例外理由（emergency/retroactive 必填） | E1 |
 | `metadata.expedite` | 插單授權 `{by, reason}`（誰批＋為何加急） | E1 |
+| `metadata.pir` | 急件 PIR 承諾 `{owner, dueBy}`（emergency 必填；合併後自動開 PIR issue） | E2 |
 | `spec.source.artifact` / `version` | 來源映像與版本 | D2 |
 | `spec.source.digest` | 簽章後的 image digest（`sha256:...`） | D4（簽章後回填） |
 | `spec.dataClassification` | 資料分級（模擬） | D2 |
