@@ -52,7 +52,9 @@ def surgical_update(text: str, new: dict) -> tuple[str, dict]:
         stripped = line.lstrip()
         indent = len(line) - len(stripped)
         # 進入 / 離開 spec.source 區塊(以縮排判定)
-        if re.match(r"^\s*source:\s*$", line):
+        # 允許 source: 行尾帶註解(真實 deployments 檔的 source: 常有說明註解;
+        # 早期只比對 `source:$` 會漏進區塊 → 過版「無變更」。真 live 才抓到的雷)。
+        if re.match(r"^\s*source:\s*(#.*)?$", line):
             in_source = True
             src_indent = indent
             out.append(line)

@@ -14,13 +14,13 @@ metadata:
   priority: P3                  # P1..P4（P1 最急）
 spec:
   source:
-    artifact: localhost/supply-chain-backend           # D6 本機實跑:podman build 的真實映像
-    version: d6                                         # 本次部署的版本 tag
-    digest: "sha256:98a5ba98f42739af7dad598132ae90506bdc2bd2f0c2ec805d0d4d67735f3e7a"  # D4 簽章後回填(對應 sig/supply-chain-backend.sig)
-    gitCommit: "def4567"                               # 血統:源碼 commit(範例值;真實由 D4 build 帶 github.sha)
+    artifact: localhost/supply-chain-backend           # B 本機實跑:podman build 的真實映像
+    version: b1                                         # 本次部署的版本 tag(B 真 live 重建)
+    digest: "sha256:707f88c2ef9be6f4001f93b494b8db2a7e0fb997a4e293f60f3cd4a8ac020b77"  # 真實 image ID;cosign 簽章後回填(對應 sig/supply-chain-backend.sig)
+    gitCommit: "def4567"                               # 血統:源碼 commit(範例值;github demo 非 git 控管)
     gitTag: "v0.0.0-EXAMPLE"                            # 發布 tag(範例值;部署釘 digest 不釘 tag)
-    testReport: "sha256:0c025ecc8cc6c88e94b8338e34b161abb5d2d50627661a6006ea6bc4631f8d55"  # 測試證據指紋(範例值;真實=test job surefire 報告雜湊)
-    testCount: 3                                        # 測試數(test gate:>=1;隨 digest 過版)
+    testReport: "sha256:13c01fb542dc0f6728824f6e9f7a4c66e3e7f0b36dab75ad8cd42422dd414349"  # 真實測試證據:mvn test 的 surefire 報告 sha256
+    testCount: 3                                        # 真實測試數(ProductResourceTest 3 案全過)
   dataClassification: internal   # 模擬分級（非真實機密分級）
   runtime:
     type: openliberty
