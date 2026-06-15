@@ -6,7 +6,7 @@ kind: DeploymentRequest
 metadata:
   app: supply-chain-backend
   environment: openliberty-sandbox
-  serviceRequest: "#0"          # 連回服務請求 issue 編號（範例用 #0；實際填真實 issue 號）
+  serviceRequest: "#34"          # 連回服務請求 issue 編號（範例用 #0；實際填真實 issue 號）
   requestedBy: developer        # SoD：請求者角色（ISO 27001 A.5.3）
   # 變更分類（TASK-E1）：標準變更＝預核准、走黃金路徑自動放行。
   # 例外型別 emergency/retroactive 需附 justification；插單填 expedite{by,reason}。

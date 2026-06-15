@@ -31,7 +31,7 @@ module "backend" {
   source    = "../../modules/openliberty-service"
   name      = "supply-chain-backend-prod"   # 容器名含環境,三區可並存不衝突
   image     = var.image
-  http_port = 9080
+  http_port = 9083                          # 各區獨立 host 埠(原誤設 9080 與 sandbox 衝突)
   memory_mb = 1024
 
   env = {
