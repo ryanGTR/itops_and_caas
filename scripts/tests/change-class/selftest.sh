@@ -59,6 +59,12 @@ write("nopir", {"changeType": "emergency", "justification": "prod incident #42"}
 # F: 急件附理由 + PIR 承諾 → 合法
 write("okemerg", {"changeType": "emergency", "justification": "prod incident #42",
                   "pir": {"owner": "oncall", "dueBy": "2026-06-20"}})
+# G: 補單缺 nonconformity(TASK-E5:補單≠漂白)
+write("noncf", {"changeType": "retroactive", "justification": "手動改了線上",
+                "pir": {"owner": "sre", "dueBy": "2026-06-22"}})
+# H: 補單齊全(justification + pir + nonconformity)→ 合法
+write("okretro", {"changeType": "retroactive", "justification": "手動改了線上",
+                  "pir": {"owner": "sre", "dueBy": "2026-06-22"}, "nonconformity": "#21"})
 PY
 
 check 1 "急件缺 justification → 拒絕"        --deployments-dir "$TMP/noreason"
@@ -67,6 +73,8 @@ check 1 "插單缺 by/reason → 拒絕"            --deployments-dir "$TMP/bade
 check 1 "繞過旗標(skipVerify)→ 拒絕"        --deployments-dir "$TMP/bypass"
 check 1 "急件缺 PIR 承諾 → 拒絕"             --deployments-dir "$TMP/nopir"
 check 0 "急件附 justification + PIR → 通過"  --deployments-dir "$TMP/okemerg"
+check 1 "補單缺 nonconformity → 拒絕"        --deployments-dir "$TMP/noncf"
+check 0 "補單齊全(理由+PIR+不符合事項)→ 通過" --deployments-dir "$TMP/okretro"
 
 echo
 if [ "$FAILED" -ne 0 ]; then

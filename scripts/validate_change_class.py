@@ -8,7 +8,8 @@
   1. changeType 必須是 standard|normal|emergency|retroactive(缺 = standard)。
   2. priority 若有,必須是 P1..P4。
   3. emergency / retroactive ⇒ 必附 justification(非空)——例外要有理由。
-  3b. emergency ⇒ 必附 pir{owner, dueBy}——「先做後審」的事後回顧不可賴帳(TASK-E2)。
+  3b. emergency / retroactive ⇒ 必附 pir{owner, dueBy}——事後回顧不可賴帳(TASK-E2/E5)。
+  3c. retroactive(補單)⇒ 必附 nonconformity(關聯的不符合事項/漂移 issue)——補單≠漂白(TASK-E5)。
   4. expedite(插單)若有,必須同時有 by 與 reason(誰批 + 為何加急,SoD + 留痕)。
   5. ★ 安全閘門不可因 changeType 關閉:請求內不得出現任何「繞過旗標」
      (如 skipVerify / bypassGate / disableScan…)——這是本層的核心鐵則,
@@ -36,7 +37,8 @@ except ImportError:
 
 CHANGE_TYPES = {"standard", "normal", "emergency", "retroactive"}
 NEEDS_JUSTIFICATION = {"emergency", "retroactive"}
-NEEDS_PIR = {"emergency"}  # 急件:先做後審 → 必須先「承諾」一張 PIR(TASK-E2)
+NEEDS_PIR = {"emergency", "retroactive"}      # 急件先做後審、補單事後補,都要承諾 PIR(E2/E5)
+NEEDS_NONCONFORMITY = {"retroactive"}          # 補單必須綁「不符合事項」(E5:補單≠漂白)
 PRIORITY_RE = re.compile(r"^P[1-4]$")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
@@ -118,7 +120,15 @@ def main() -> int:
                 due = str(pir.get("dueBy", "") or "")
                 if not DATE_RE.match(due):
                     err(f, "ISO 27001 A.5.36",
-                        f"emergency 的 pir.dueBy 須為 YYYY-MM-DD(目前:{due!r})")
+                        f"{change_type} 的 pir.dueBy 須為 YYYY-MM-DD(目前:{due!r})")
+
+        # 3c. retroactive(補單)⇒ 必須綁「不符合事項」——補單≠漂白(TASK-E5)。
+        #     記錄既成事實之外,還要連回「為何繞得過流程」的不符合事項/事故,啟動矯正。
+        if change_type in NEEDS_NONCONFORMITY:
+            if not str(meta.get("nonconformity", "") or "").strip():
+                err(f, "ISO 27001 A.5.36 / 矯正措施",
+                    "retroactive(補單)必須綁 nonconformity(關聯的不符合事項/漂移 issue)"
+                    "——補單≠漂白,要連回根因。")
 
         # 4. expedite(插單)需 by + reason
         expedite = meta.get("expedite")

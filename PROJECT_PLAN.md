@@ -616,7 +616,7 @@
 - [x] 急件可先做後審,但合併自動開 PIR、簽章/驗章閘門照常強制(TASK-E2)
 - [x] 稽核報告能列出例外件數/佔比與 PIR 完成情況(TASK-E3)
 - [x] 漂移對帳能抓出 CMDB 與線上不符並開 issue(TASK-E4)
-- [ ] 補單以 retroactive + 強制 PIR/不符合事項處理,文件講清補單≠漂白(TASK-E5)
+- [x] 補單以 retroactive + 強制 PIR/不符合事項處理,文件講清補單≠漂白(TASK-E5)
 
 > 全數打勾 = 急件/插單/補單都有受控通道,技術護欄全程不鬆綁,繞過流程的變更抓得到、例外量可報表化。
 ### Gate F(Phase F 多環境晉級與過版完成檢查)
@@ -671,6 +671,7 @@
 - `docs/adr/0001-phase2-iac-stack.md` — Phase 2 IaC 技術棧決策
 - `docs/adr/0002-openliberty-runtime-and-deploy.md` — Phase D 執行環境與部署/簽章決策
 - `docs/adr/0003-exception-path-and-drift.md` — Phase E 例外路徑與漂移治理決策
+- `docs/retroactive-change.md` — 補單流程（補單≠漂白,TASK-E5）
 - `docs/multi-env-promotion.md` — Phase F 多環境晉級與過版藍圖(build once, promote)
 - `docs/provenance-and-identifiers.md` — branch/tag/commit SHA/digest 識別子與血統(觀念參考)
 - `docs/adr/0004-multi-env-promotion.md` — Phase F 多環境晉級與過版決策
