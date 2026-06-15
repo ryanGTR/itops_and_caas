@@ -84,8 +84,8 @@ def main() -> int:
         return 0
 
     change_type = (req.get("metadata", {}) or {}).get("changeType", "standard")
-    if change_type != "emergency":
-        print(f"↷ 略過(changeType={change_type},非 emergency,不需 PIR):{p}")
+    if change_type not in ("emergency", "retroactive"):
+        print(f"↷ 略過(changeType={change_type},不需 PIR):{p}")
         return 0
 
     title, body = build_pir(req, args.commit)
