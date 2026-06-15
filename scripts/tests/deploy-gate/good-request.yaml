@@ -1,4 +1,4 @@
-# 合規夾具:已建置/簽章(digest 已綁)、欄位齊全 → 閘門應放行
+# 合規夾具:已建置/簽章(digest 已綁)、欄位齊全、測試證據齊全 → 閘門應放行
 apiVersion: golden-path/v1
 kind: DeploymentRequest
 metadata:
@@ -11,6 +11,8 @@ spec:
     artifact: ghcr.io/ryangtr/supply-chain-backend
     version: v1.0.0
     digest: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    testReport: "sha256:0c025ecc8cc6c88e94b8338e34b161abb5d2d50627661a6006ea6bc4631f8d55"   # 測試證據指紋(paved-road test job 帶入;此為 fixture 假值)
+    testCount: 3              # 測試數(>=1)
   dataClassification: internal
   runtime:
     type: openliberty

@@ -51,9 +51,17 @@
 | 可稽核豁免清單(SoA 式) | P2-4 | A.5.36 合規審查 | `.checkov.yaml` 每條 skip 附理由,可逐項稽核 |
 | 故意違規 self-test | P2-5 | A.5.36 合規審查 | 證明閘門真的會擋(負向測試) |
 
----
+### 測試 gate(promote what passed test)
 
-## 三、技術控制對應 ISO 20000(服務管理)
+把「測試」做成不可繞過的供應鏈閘門:沒通過測試的程式碼 build 不出可簽章的映像,
+測試證據隨 digest 一路過版,部署/過版前重驗。補上「整條鏈沒有測試」的最大缺口。
+
+| 本計畫的技術控制 | 對應 | ISO 27001:2022 控制項 | 說明 |
+|------------------|------|----------------------|------|
+| paved-road `test` job(mvn test) | `supply-chain-sign.yml` | A.8.29 開發與驗收中的安全測試 | `build-sign` `needs: test`,沒過/空套件就不 build |
+| 測試證據隨 digest 過版 | `promote.py` / `validate_promote.py` | A.8.32 變更管理 | `testReport`/`testCount` 與 digest 同搬,防舊證據漂白 |
+| 部署/過版前驗測試證據(fail-closed) | `verify_deploy_gate.py` 檢查 4 | A.8.29 安全測試 | 缺證據/空套件/指紋無效 → 拒絕(self-test 證明) |
+| 防「綠燈空殼」 | `test` job + 閘門 | A.8.29 安全測試 | 零測試/跳過測試不構成證據,雙層擋 |
 
 | 本計畫的技術控制 | 對應任務 | ISO 20000 領域 | 說明 |
 |------------------|----------|----------------|------|

@@ -1,0 +1,16 @@
+# 違規夾具:測試證據指紋格式無效(非 sha256)→ 閘門應拒絕
+# 防「貼個假字串假裝有證據」,證據必須可追溯。
+apiVersion: golden-path/v1
+kind: DeploymentRequest
+metadata:
+  app: supply-chain-backend
+  environment: openliberty-sandbox
+  requestedBy: developer
+spec:
+  source:
+    artifact: ghcr.io/ryangtr/supply-chain-backend
+    version: v1.0.0
+    digest: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    testReport: "tests-ok-trust-me"
+    testCount: 3
+  dataClassification: internal

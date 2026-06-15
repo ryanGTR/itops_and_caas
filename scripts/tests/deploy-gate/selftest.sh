@@ -27,10 +27,14 @@ expect() { # $1=期望 exit  $2=說明  其餘=gate 參數
 }
 
 echo "🔍 部署前驗章閘門 self-test"
-expect 0 "合規 + 有效簽章 → 放行" --request "$D/good-request.yaml" --signature "$D/good.sig"
+expect 0 "合規 + 有效簽章 + 測試通過 → 放行" --request "$D/good-request.yaml" --signature "$D/good.sig"
 expect 1 "未綁 digest(未建置/簽章)→ 拒絕" --request "$D/bad-request.yaml" --signature "$D/good.sig"
 expect 1 "未提供簽章 → 拒絕" --request "$D/good-request.yaml"
 expect 1 "簽章不符(偽造)→ 拒絕" --request "$D/good-request.yaml" --signature "$D/wrong.sig"
+# test gate(promote what passed test):無證據 / 空套件 / 指紋無效 一律擋
+expect 1 "無測試證據(缺 testReport)→ 拒絕" --request "$D/no-tests-request.yaml" --signature "$D/good.sig"
+expect 1 "空測試套件(testCount=0,防綠燈空殼)→ 拒絕" --request "$D/empty-tests-request.yaml" --signature "$D/good.sig"
+expect 1 "測試證據指紋無效(非 sha256)→ 拒絕" --request "$D/badreport-tests-request.yaml" --signature "$D/good.sig"
 
 echo
 if [ "$FAILED" -ne 0 ]; then

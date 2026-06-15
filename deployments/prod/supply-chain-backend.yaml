@@ -17,6 +17,8 @@ spec:
     digest: "sha256:98a5ba98f42739af7dad598132ae90506bdc2bd2f0c2ec805d0d4d67735f3e7a"
     gitCommit: "def4567"        # 血統:源碼 commit(範例值;真實由 D4 build 帶入 github.sha)
     gitTag: "v0.0.0-EXAMPLE"    # 發布 tag(範例值;人用 tag 挑、系統用 digest 釘)
+    testReport: "sha256:0c025ecc8cc6c88e94b8338e34b161abb5d2d50627661a6006ea6bc4631f8d55"  # 測試證據指紋(隨 digest 過版)
+    testCount: 3                # 測試數(test gate:>=1)
   dataClassification: confidential     # 隨環境(prod 較高)
   runtime:                      # ★ 隨環境不同的 config(image 不變)
     type: openliberty

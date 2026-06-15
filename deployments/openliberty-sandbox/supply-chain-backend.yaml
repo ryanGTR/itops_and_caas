@@ -19,6 +19,8 @@ spec:
     digest: "sha256:98a5ba98f42739af7dad598132ae90506bdc2bd2f0c2ec805d0d4d67735f3e7a"  # D4 簽章後回填(對應 sig/supply-chain-backend.sig)
     gitCommit: "def4567"                               # 血統:源碼 commit(範例值;真實由 D4 build 帶 github.sha)
     gitTag: "v0.0.0-EXAMPLE"                            # 發布 tag(範例值;部署釘 digest 不釘 tag)
+    testReport: "sha256:0c025ecc8cc6c88e94b8338e34b161abb5d2d50627661a6006ea6bc4631f8d55"  # 測試證據指紋(範例值;真實=test job surefire 報告雜湊)
+    testCount: 3                                        # 測試數(test gate:>=1;隨 digest 過版)
   dataClassification: internal   # 模擬分級（非真實機密分級）
   runtime:
     type: openliberty

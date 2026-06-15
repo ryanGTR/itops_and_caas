@@ -45,6 +45,8 @@ spec:
     artifact: reg/app
     version: v1
     digest: $1
+    testReport: "sha256:0c025ecc8cc6c88e94b8338e34b161abb5d2d50627661a6006ea6bc4631f8d55"
+    testCount: 3
   dataClassification: confidential
   runtime:
     type: openliberty

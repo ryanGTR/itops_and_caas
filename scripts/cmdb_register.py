@@ -84,6 +84,8 @@ def main() -> int:
                 "digest": source.get("digest"),
                 "gitCommit": source.get("gitCommit", ""),   # 血統:源碼 commit(供過版傳遞)
                 "gitTag": source.get("gitTag", ""),          # 發布 tag
+                "testReport": source.get("testReport", ""),  # 測試證據指紋(供過版傳遞)
+                "testCount": source.get("testCount", 0),     # 測試數(test gate 用)
                 "signature": sig_rel,
             },
             "runtime": {

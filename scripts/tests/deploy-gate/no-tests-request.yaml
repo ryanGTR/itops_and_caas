@@ -1,0 +1,14 @@
+# 違規夾具:無測試證據(source.testReport 缺漏)→ 閘門應拒絕(fail-closed)
+# digest/簽章/欄位皆有效,唯一失敗點=沒有測試證據。
+apiVersion: golden-path/v1
+kind: DeploymentRequest
+metadata:
+  app: supply-chain-backend
+  environment: openliberty-sandbox
+  requestedBy: developer
+spec:
+  source:
+    artifact: ghcr.io/ryangtr/supply-chain-backend
+    version: v1.0.0
+    digest: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  dataClassification: internal

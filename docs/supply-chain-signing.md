@@ -24,12 +24,16 @@ tags: [supply-chain, sbom, sca, cosign, signing, isms, iso27001]
 ## 這條鏈(每一步的治理意義)
 
 ```
-build ──▶ SBOM(syft) ──▶ SCA 掃描(grype) ──▶ cosign 簽章 ──▶ 輸出 digest
-  │          │                │                   │              │
-不可變映像   軟體物料清單      已知漏洞高風險即擋    來源可驗證      回填 DeploymentRequest
-            (A.8.28)         (A.8.8 弱點管理)     (A.8.28 完整性)  (spec.source.digest)
+test ──▶ build ──▶ SBOM(syft) ──▶ SCA 掃描(grype) ──▶ cosign 簽章 ──▶ 輸出 digest + 測試證據
+  │        │          │                │                   │              │
+mvn test  不可變映像   軟體物料清單      已知漏洞高風險即擋    來源可驗證      回填 DeploymentRequest
+沒過就擋   (A.8.28)    (A.8.28)         (A.8.8 弱點管理)     (A.8.28)       (digest + testReport/testCount)
+(A.8.29)
 ```
 
+- **test 是第一關**:`test` job 跑 `mvn test`,沒過 / 空套件就 fail,`build-sign` 因 `needs: test`
+  根本不啟動——**沒通過測試的程式碼,build 不出可簽章的映像**。通過後輸出 `testCount` +
+  surefire 報告指紋 `testReport`,讓下游「promote what passed test」名副其實(見 `docs/deploy-gate.md` 第 4 道)。
 - **以 digest 簽,不簽 tag**:tag 可被覆蓋,digest 不可變——簽 digest 才有完整性保證。
 - **SBOM 以 attestation 綁上映像**:之後可追溯這個映像由哪些元件組成。
 - **驗章在部署前**(TASK-D5):用 `trust/cosign.pub` 驗,未簽/驗不過 → fail-closed 拒絕部署。
@@ -67,9 +71,10 @@ jobs:
 
 | 控制項 | 體現 |
 |---|---|
+| ISO 27001 A.8.29 開發與驗收中的安全測試 | `test` job(mvn test)沒過就擋 build,輸出測試證據 |
 | ISO 27001 A.8.28 安全開發 / 供應鏈完整性 | 簽章 + 以 digest 簽 |
 | ISO 27001 A.8.8 弱點管理 | SCA 掃描高風險即擋 |
-| ISO 27001 A.8.25 安全開發生命週期 | build→SBOM→scan→sign 一條鏈 |
+| ISO 27001 A.8.25 安全開發生命週期 | test→build→SBOM→scan→sign 一條鏈 |
 | 補 supply-chain L4 缺口 | cosign 簽章落地 |
 
 ## See Also
