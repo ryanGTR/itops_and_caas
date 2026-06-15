@@ -1,0 +1,38 @@
+# 護欄:部署前驗章閘門 self-test (TASK-D5)
+#
+# 跑 scripts/tests/deploy-gate/selftest.sh,證明閘門 fail-closed:
+# 合規放行;未簽 / 無 digest / 偽造簽章 一律拒絕。
+# 只用公鑰(trust/cosign.pub)+ 已簽 fixture 驗證,不需私鑰。
+#
+# 對應治理控制項:ISO 27001 A.8.28 完整性 / ITIL 發布驗證 / 部署前檢查。
+
+name: policy-deploy-gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-gate-selftest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: 部署前驗章閘門 self-test
+        run: bash scripts/tests/deploy-gate/selftest.sh

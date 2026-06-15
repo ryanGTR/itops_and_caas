@@ -1,0 +1,13 @@
+# 違規夾具:未建置/未簽章(digest 空)→ 閘門應拒絕(fail-closed)
+apiVersion: golden-path/v1
+kind: DeploymentRequest
+metadata:
+  app: rogue-app
+  environment: openliberty-sandbox
+  requestedBy: developer
+spec:
+  source:
+    artifact: ghcr.io/ryangtr/rogue-app
+    version: v0.0.0
+    digest: ""
+  dataClassification: internal

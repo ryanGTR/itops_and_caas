@@ -1,0 +1,16 @@
+# 合規夾具:已建置/簽章(digest 已綁)、欄位齊全 → 閘門應放行
+apiVersion: golden-path/v1
+kind: DeploymentRequest
+metadata:
+  app: supply-chain-backend
+  environment: openliberty-sandbox
+  serviceRequest: "#42"
+  requestedBy: developer
+spec:
+  source:
+    artifact: ghcr.io/ryangtr/supply-chain-backend
+    version: v1.0.0
+    digest: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  dataClassification: internal
+  runtime:
+    type: openliberty
