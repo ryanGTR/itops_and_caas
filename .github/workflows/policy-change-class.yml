@@ -36,3 +36,6 @@ jobs:
 
       - name: 變更分類 self-test(fail-closed)
         run: bash scripts/tests/change-class/selftest.sh
+
+      - name: 急件 PIR 開單器 self-test(TASK-E2)
+        run: bash scripts/tests/pir/selftest.sh
