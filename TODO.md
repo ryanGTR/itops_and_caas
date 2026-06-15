@@ -31,6 +31,14 @@
 
 ## 📋 待辦(依優先序)
 
+### 🔥 0 — itops × iTop(Combodo)真整合(現行主線,2026-06-16 起)
+> Ryan 一路說的「itop」其實是 **iTop 產品**(真 ITSM/CMDB)。詳見 `integration/itop/README.md`。
+- [x] iTop 3.2.2 本機 Docker 站起來 + ITIL 安裝完成(101 表)
+- [ ] **啟用 REST API**(給 user「REST Services User」profile + config `allowed_rest_profiles`)
+- [ ] 寫 `scripts/itop_sync.py`:把 host/middleware/software CI + 服務請求 + 部署 推進 iTop(對映表在 README)
+- [ ] 接 trigger:部署成功後呼叫 itop_sync(像 cmdb_register 但目標是真 iTop)
+> ⚠️ 接續者注意:iTop 容器/VM 已於 2026-06-16 早上關閉(Ryan 上班)。重站 iTop 看 `integration/itop/README.md` 的「如何重現」(~5 分鐘)。
+
 ### A — 收口 / 可見性(低成本、對履歷回報高)
 - [ ] 把 CMDB 拓樸圖 + 單據追溯掛進治理後台 / README 文件導覽
 - [ ] 治理後台加「single-ticket 連結」與「拓樸連結」入口
