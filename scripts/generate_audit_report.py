@@ -33,6 +33,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+try:  # 軟性相依:無 PyYAML 時,端到端證據鏈一節會優雅略過(不影響既有 PR/Actions 報告)。
+    import yaml
+except ImportError:  # pragma: no cover
+    yaml = None
+
 # --- Policy -> ISO control mapping (source of truth: COMPLIANCE_MAP.md) ----
 # Keyed by the workflow name as it appears in GitHub Actions.
 POLICY_CONTROLS = {
@@ -134,7 +139,105 @@ def md_table(headers: list[str], rows: list[list[str]]) -> str:
     return "\n".join([line, sep, body]) if rows else line + "\n" + sep + "\n| (無資料) |"
 
 
-def build_report(repo, since, until, runs, prs) -> str:
+# --- 黃金路徑七階段 ↔ ISO 控制項(設計來源:docs/golden-path-request-to-deploy.md) ---
+GOLDEN_PATH_STAGES = [
+    ("① 服務請求單", "ITIL 請求履行 / ISO 20000 服務請求"),
+    ("② 請求轉變更(PR)", "ISO 27001 A.8.32 變更管理"),
+    ("③ 供應鏈建置 + 簽章", "ISO 27001 A.8.28 供應鏈完整性"),
+    ("④ 佈建環境(OpenTofu)", "ISO 27001 Secure by Default"),
+    ("⑤ 部署前驗章閘門", "ISO 27001 完整性 / ITIL 發布驗證"),
+    ("⑥ 部署 + 煙霧測試", "ISO 20000 發布與部署管理"),
+    ("⑦ 登錄 CMDB + 稽核證據", "ISO 20000 組態管理 / ISO 27001 A.8.9"),
+]
+
+
+def _exists(path: str) -> bool:
+    return bool(path) and Path(path).is_file()
+
+
+def collect_golden_path_chains(deployments_dir: str, cmdb_dir: str):
+    """掃 deployments/<env>/last-deploy.json,把每次成功部署串成七階段證據鏈。
+
+    全部讀本機版控內物證(離線可跑);無 PyYAML 或無部署紀錄時回空清單。
+    """
+    if yaml is None:
+        return []
+    dep_root = Path(deployments_dir)
+    if not dep_root.is_dir():
+        return []
+
+    chains = []
+    for record_path in sorted(dep_root.rglob("last-deploy.json")):
+        try:
+            rec = json.loads(record_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        app, env = rec.get("app", "?"), rec.get("environment", "?")
+        req_path = dep_root / env / f"{app}.yaml"
+        sig_path = dep_root / env / "sig" / f"{app}.sig"
+        ci_path = Path(cmdb_dir) / env / f"{app}.yaml"
+
+        req = {}
+        if req_path.is_file():
+            req = yaml.safe_load(req_path.read_text(encoding="utf-8")) or {}
+        svc_req = ((req.get("metadata") or {}).get("serviceRequest")) or "—"
+        digest = rec.get("digest", "—")
+        smoke = rec.get("smokeTest") or {}
+
+        # 每階段:物證指標 + 狀態(由物證實際存在/內容判定)
+        stages = [
+            (svc_req != "—", f"服務請求 {svc_req}(docs/service-catalogue.md)"),
+            (req_path.is_file(), f"DeploymentRequest:{req_path}(PR 即變更)"),
+            (sig_path.is_file() and digest.startswith("sha256:"),
+             f"cosign 簽章:{sig_path} 對 {digest[:23]}…"),
+            (Path(f"iac/environments/{env}").is_dir(),
+             f"OpenTofu 環境:iac/environments/{env}(預設安全模組)"),
+            (rec.get("gate") == "passed", f"驗章閘門:gate={rec.get('gate', '—')}(fail-closed)"),
+            (rec.get("result") == "success",
+             f"部署={rec.get('result', '—')};煙霧 {smoke.get('health', '?')} + {smoke.get('business', '?')}"),
+            (ci_path.is_file(), f"CMDB CI:{ci_path}"),
+        ]
+        chains.append({
+            "app": app, "env": env, "digest": digest,
+            "deployedAt": rec.get("deployedAt", "—"),
+            "result": rec.get("result", "—"), "stages": stages,
+        })
+    return chains
+
+
+def build_golden_path_section(chains) -> list[str]:
+    md: list[str] = []
+    md.append("## 四、黃金路徑端到端證據鏈(七階段:請求 → 部署 → CMDB)")
+    md.append("")
+    md.append("> 把一次部署沿「請求→PR→建置/簽章→驗章→佈建→部署→CMDB」串成一條鏈,")
+    md.append("> 每階段附**物證指標**與對映 ISO 控制項——稽核可逐階段點開查核(TASK-D7)。")
+    md.append("")
+    if not chains:
+        md.append("_尚無成功部署的端到端證據(deployments/<env>/last-deploy.json 不存在)。_")
+        md.append("")
+        return md
+    for c in chains:
+        md.append(f"### {c['app']} → {c['env']}")
+        md.append("")
+        md.append(f"- **映像 digest**:`{c['digest']}`")
+        md.append(f"- **部署時間(UTC)**:{c['deployedAt']}　**結果**:{c['result']}")
+        md.append("")
+        rows = []
+        for (stage, iso), (ok, evidence) in zip(GOLDEN_PATH_STAGES, c["stages"]):
+            rows.append([stage, "✅" if ok else "❌", evidence, iso])
+        md.append(md_table(["階段", "狀態", "物證", "對映 ISO 控制項"], rows))
+        md.append("")
+        complete = all(ok for ok, _ in c["stages"])
+        md.append(
+            "> ✅ 七階段物證齊備:這次部署**端到端可稽核**。"
+            if complete else
+            "> ⚠️ 有階段物證缺漏,請查核上表 ❌ 項。"
+        )
+        md.append("")
+    return md
+
+
+def build_report(repo, since, until, runs, prs, chains=None) -> str:
     md: list[str] = []
     md.append("# 稽核證據報告(Audit Evidence Report)")
     md.append("")
@@ -205,8 +308,11 @@ def build_report(repo, since, until, runs, prs) -> str:
         md.append("> 均須經 PR。後續報告此區將累積完整的「誰改/誰核准」證據。")
     md.append("")
 
-    # --- Section 4: conclusion ---
-    md.append("## 四、稽核結論")
+    # --- Section 4: golden-path end-to-end evidence chain (TASK-D7) ---
+    md.extend(build_golden_path_section(chains or []))
+
+    # --- Section 5: conclusion ---
+    md.append("## 五、稽核結論")
     md.append("")
     total_runs = sum(len(v) for v in runs.values())
     total_blocked = sum(
@@ -215,6 +321,12 @@ def build_report(repo, since, until, runs, prs) -> str:
     md.append(f"- 期間內政策檢查共執行 **{total_runs}** 次,攔截(failure)**{total_blocked}** 次。")
     md.append(f"- 已合併變更(PR)**{len(prs)}** 件,全部須通過上述護欄方可合併。")
     md.append("- 每項技術控制均對應具體 ISO 控制項編號(見第一節),可供稽核逐項查核。")
+    if chains:
+        complete = sum(1 for c in chains if all(ok for ok, _ in c["stages"]))
+        md.append(
+            f"- 端到端黃金路徑部署 **{len(chains)}** 件,其中 **{complete}** 件七階段物證齊備"
+            "(見第四節),體現「請求→部署→CMDB」全程可追溯。"
+        )
     md.append("")
     md.append("> 本報告為自動產出之合規證據(ISO 27001 A.5.36 / ISO 20000 服務報告)。")
     return "\n".join(md)
@@ -226,6 +338,10 @@ def main() -> int:
     parser.add_argument("--since", help="起始日 YYYY-MM-DD(預設:30 天前)")
     parser.add_argument("--until", help="結束日 YYYY-MM-DD(預設:今天)")
     parser.add_argument("--output", help="輸出檔路徑(預設:印到 stdout)")
+    parser.add_argument("--deployments-dir", default="deployments",
+                        help="部署紀錄根目錄(端到端證據鏈來源;預設 deployments)")
+    parser.add_argument("--cmdb-dir", default="cmdb",
+                        help="CMDB 根目錄(端到端證據鏈來源;預設 cmdb)")
     args = parser.parse_args()
 
     now = dt.datetime.now(dt.timezone.utc)
@@ -241,7 +357,8 @@ def main() -> int:
 
     runs = collect_runs(repo, since, until)
     prs = collect_merged_prs(repo, since)
-    report = build_report(repo, since, until, runs, prs)
+    chains = collect_golden_path_chains(args.deployments_dir, args.cmdb_dir)
+    report = build_report(repo, since, until, runs, prs, chains)
 
     if args.output:
         Path(args.output).write_text(report, encoding="utf-8")
