@@ -384,6 +384,122 @@
 
 ---
 
+## 5-E. Phase E 工作分解 — 例外與漂移治理(現實校正層)
+
+> 本階段疊在黃金路徑之上,把真實維運的三種例外(急件 / 插單 / 補單)收進**受控通道**,
+> 而非假裝它們不存在。設計與框架對映見 `docs/exception-and-drift-governance.md`;
+> 關鍵決策見 `docs/adr/0003-exception-path-and-drift.md`。
+> **設計總則:鬆綁的是「人工審核的時點/對象/順序」,絕不鬆綁技術安全閘門(簽章/掃描/驗章)。**
+> 執行慣例同前:逐 TASK、每步停下確認、不跳階段;護欄變更(workflows/、policies/)PR 標 SoD。
+
+---
+
+#### [TASK-E0] 藍圖與 ADR(本任務)
+
+**目標**:在動程式前,把三場景的設計與框架對映寫清楚、決策留痕。
+
+**步驟**:
+1. 寫 `docs/exception-and-drift-governance.md`(三場景設計 + 框架對映)。
+2. 寫 `docs/adr/0003-exception-path-and-drift.md`(核心決策:鬆綁什麼/不鬆綁什麼、漂移偵測)。
+3. `PROJECT_PLAN.md` 加本 Phase E 段 + Gate E。
+
+**驗收標準**:藍圖 + ADR 完成,Ryan 審核確認方向後,ADR 改 accepted,再進 E1。
+
+**對應治理控制項**:稽核留痕文化(延續 ADR-0001/0002)。
+
+---
+
+#### [TASK-E1] 變更分類模型(Change Classification)
+
+**目標**:讓每個部署請求帶上「變更型別 / 優先序 / 理由」,作為例外路徑的地基。
+
+**前置條件**:E0 ADR accepted;D2 DeploymentRequest 已就位。
+
+**步驟**:
+1. DeploymentRequest 加 `changeType: standard|normal|emergency|retroactive`、`priority: P1..P4`、`justification`、`expedite: {by, reason}`(預設 standard)。
+2. 建 `scripts/validate_change_class.py`:`emergency/retroactive ⇒ 必附 justification`;非標準型別需必要欄位;**驗證安全閘門未被依 changeType 關閉**(fail-closed)。
+3. 加 `.github/workflows/policy-change-class.yml`(CI 閘門)+ 反例 self-test。
+
+**驗收標準**:缺理由的急件 / 缺欄位的非標準變更被擋;標準變更不受影響;self-test 證明 fail-closed。
+
+**對應治理控制項**:ISO 27001 A.8.32 變更管理(變更分類)。
+
+---
+
+#### [TASK-E2] 急件路徑 + 強制 PIR(Emergency + Post-Implementation Review)
+
+**目標**:急件可「先做後審」,但事後回顧強制、有到期,不變成永久後門。
+
+**步驟**:
+1. 建 PIR issue template(目的/影響/根因/後續行動/到期)。
+2. 加 workflow:`changeType: emergency` 的變更合併後**自動開 PIR issue**(含到期日)。
+3. E1 的 `policy-change-class` 擴充:`emergency ⇒ 必有 PIR 連結 / issue`。
+
+**驗收標準**:合併一筆急件變更會自動產生 PIR issue;未綁 PIR 的急件被標示/擋下;簽章/驗章閘門照常強制。
+
+**對應治理控制項**:ISO 27001 A.8.32(緊急變更)、A.5.36(事後審查)。
+
+---
+
+#### [TASK-E3] 例外可見性(Service Reporting)
+
+**目標**:把例外量做成報表,讓管理層看見例外的真實成本。
+
+**步驟**:
+1. 擴充 `scripts/generate_audit_report.py`:加「例外統計」一節——本期 emergency/expedite/retroactive 件數與佔比、PIR 完成率。
+2. 資料來源:DeploymentRequest 的 changeType / priority + PIR issue 狀態。
+
+**驗收標準**:稽核報告能列出本期例外件數、佔比與 PIR 完成情況。
+
+**對應治理控制項**:ISO 20000 服務報告;ISO 27001 A.5.36。
+
+---
+
+#### [TASK-E4] 漂移偵測 / 對帳(補單偵測)
+
+**目標**:主動抓出「沒走流程的變更」——線上實際態與 CMDB 期望態對不上。
+
+**前置條件**:D7 CMDB(期望態 digest)就位。
+
+**步驟**:
+1. 建 `scripts/reconcile.py`:讀 `cmdb/` 各 CI 的 digest,對比線上容器實際 running image digest(PoC 用 `podman inspect`);不符或缺漏即漂移。
+2. 漂移 → 開 GitHub issue(out-of-band change detected),留痕。
+3. 加反例 self-test(竄改/缺漏被偵測);文件化 PoC vs 正式環境(registry / orchestrator)的實際態來源差異。
+
+**驗收標準**:CMDB 與線上一致時靜默;digest 漂移 / 缺登錄時被偵測並開 issue;self-test 通過。
+
+**對應治理控制項**:ISO 27001 A.8.9 組態管理、A.5.36 合規審查。
+
+---
+
+#### [TASK-E5] 補單流程(Retroactive Change,補單≠漂白)
+
+**目標**:把既成的未授權變更**留下事實 + 啟動矯正**,而非默默漂白。
+
+**步驟**:
+1. `changeType: retroactive` 的 DeploymentRequest 用來登錄既成變更,**強制綁一張 PIR / 不符合事項**(由 `policy-change-class` 驗)。
+2. 文件化「(a) 記錄變更」與「(b) root cause 為何繞得過」分開處理,終極解是修護欄讓繞過不可能。
+
+**驗收標準**:retroactive 變更未綁 PIR/不符合事項會被擋;文件清楚說明補單≠漂白。
+
+**對應治理控制項**:ISO 27001 A.8.32、A.5.36 + 矯正措施。
+
+---
+
+#### [TASK-E6](選配)CAB-as-code:一般變更的核准分離
+
+**目標**:`normal` 變更需「變更權責者」核准,體現 CAB 的職責分離。
+
+**步驟**:
+1. CODEOWNERS 對 `deployments/` 指定變更權責者(平台+資安);`normal` 變更需其核准。
+2. 文件化單人 PoC → 真實多人組織的對映(沿用 tooling-roles 做法)。
+
+**驗收標準**:一般變更留下獨立核准軌跡;文件說明多人對映。
+
+**對應治理控制項**:ISO 27001 A.5.3 職責分離;A.8.32 變更管理。
+
+---
+
 ## 6. Phase Gate(階段關卡檢查)
 
 每階段結束,需確認以下才可進入下一階段:
@@ -409,6 +525,15 @@
 - [x] CMDB 登錄本次 CI;能產出涵蓋七階段、對映 ISO 的端到端證據報告(TASK-D7)
 
 > 全數打勾 = 一張服務請求單能自動走到 app 跑在 OpenLiberty 上,且全程可稽核。
+
+### Gate E(Phase E 例外與漂移治理完成檢查)
+- [ ] 變更分類模型就位,缺理由的急件 / 非標準變更被擋(TASK-E1)
+- [ ] 急件可先做後審,但合併自動開 PIR、簽章/驗章閘門照常強制(TASK-E2)
+- [ ] 稽核報告能列出例外件數/佔比與 PIR 完成情況(TASK-E3)
+- [ ] 漂移對帳能抓出 CMDB 與線上不符並開 issue(TASK-E4)
+- [ ] 補單以 retroactive + 強制 PIR/不符合事項處理,文件講清補單≠漂白(TASK-E5)
+
+> 全數打勾 = 急件/插單/補單都有受控通道,技術護欄全程不鬆綁,繞過流程的變更抓得到、例外量可報表化。
 
 ---
 
@@ -449,5 +574,7 @@
 - `docs/deploy-to-openliberty.md` — 部署到 OpenLiberty + 煙霧測試（TASK-D6）
 - `cmdb/README.md` — CMDB-as-code 組態基線（TASK-D7）
 - `docs/cmdb-and-evidence-chain.md` — CMDB + 端到端稽核證據鏈（TASK-D7）
+- `docs/exception-and-drift-governance.md` — Phase E 例外與漂移治理藍圖（急件/插單/補單）
 - `docs/adr/0001-phase2-iac-stack.md` — Phase 2 IaC 技術棧決策
 - `docs/adr/0002-openliberty-runtime-and-deploy.md` — Phase D 執行環境與部署/簽章決策
+- `docs/adr/0003-exception-path-and-drift.md` — Phase E 例外路徑與漂移治理決策
