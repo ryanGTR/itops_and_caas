@@ -47,9 +47,12 @@ echo "套用分支保護:${REPO} @ ${BRANCH}"
 #   - required_pull_request_reviews.require_code_owner_reviews:動到 CODEOWNERS
 #       涵蓋的政策路徑時,必須由對應 owner(平台+資安)核准 → 「改護欄需更嚴格審核」。
 #   - enforce_admins=true:連 admin 也不能繞過(SoD 不留後門)。
-#   - required_status_checks:四道護欄必須通過才可合併(變更管理 / A.8.32)。
+#   - required_status_checks:六道護欄必須通過才可合併(變更管理 / A.8.32)。
 #       policy-secrets / policy-structure(Phase 1)+ policy-iac(Phase 2 IaC 閘門)
-#       + cmdb-validate(Phase D 組態基線閘門,TASK-D7:防 CMDB 與真相漂移)。
+#       + cmdb-validate(Phase D 組態基線閘門,TASK-D7:防 CMDB 與真相漂移)
+#       + deploy-gate-selftest(Phase D 部署前驗章閘門 self-test,TASK-D5)
+#       + change-class(Phase E 變更分類閘門,TASK-E1:例外受控、護欄不鬆綁)。
+#       原則:會跑的護欄就該強制——「不合規根本合不了」不留漏網。
 #   - restrictions=null:不額外限制可推送者(交由 PR + review 控管)。
 #   - allow_force_pushes / allow_deletions=false:保護歷史可追溯性。
 #
@@ -58,7 +61,7 @@ read -r -d '' BODY <<JSON || true
 {
   "required_status_checks": {
     "strict": true,
-    "contexts": ["policy-secrets", "policy-structure", "policy-iac", "cmdb-validate"]
+    "contexts": ["policy-secrets", "policy-structure", "policy-iac", "cmdb-validate", "deploy-gate-selftest", "change-class"]
   },
   "enforce_admins": true,
   "required_pull_request_reviews": {
