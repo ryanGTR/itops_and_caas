@@ -1,0 +1,79 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>itops 治理後台 — 單據生命週期</title>
+<style>
+:root { --bg:#0f1419; --card:#1a2230; --ink:#e6edf3; --muted:#8b98a5; --line:#2d3748;
+  --ok:#2ea043; --warn:#d29922; --info:#388bfd; --accent:#a371f7; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.6
+  -apple-system,"Noto Sans CJK TC",sans-serif; padding:24px; }
+header h1 { margin:0 0 4px; font-size:24px; }
+header p { color:var(--muted); margin:0 0 8px; }
+.stat { display:inline-block; background:var(--card); border:1px solid var(--line);
+  border-radius:8px; padding:8px 14px; margin:4px 8px 16px 0; }
+.stat b { font-size:20px; color:var(--accent); }
+section { background:var(--card); border:1px solid var(--line); border-radius:10px;
+  padding:16px 20px; margin:16px 0; }
+h2 { margin:0 0 6px; font-size:18px; }
+.tags { margin-bottom:12px; }
+.badge { display:inline-block; font-size:12px; padding:2px 8px; border-radius:10px;
+  background:#30363d; color:var(--ink); margin-right:4px; }
+.badge.itil { background:#1f3a5f; } .badge.iso { background:#3d2f5f; }
+.badge.env { background:#22343f; } .badge.ok { background:var(--ok); }
+.badge.warn { background:var(--warn); color:#1a1a1a; } .badge.info { background:var(--info); }
+.badge.state { background:#444c56; }
+table { width:100%; border-collapse:collapse; margin:8px 0; }
+th,td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--line); font-size:14px; }
+th { color:var(--muted); font-weight:600; }
+td.ok { background:rgba(46,160,67,.08); }
+.trail td { border:1px solid var(--line); vertical-align:top; width:25%; }
+.mono { font-family:ui-monospace,monospace; } .small { font-size:12px; }
+.muted { color:var(--muted); } .app { margin:14px 0 4px; font-weight:600; }
+.chain { background:#0d1117; border:1px solid var(--line); border-radius:8px;
+  padding:10px 14px; font-family:ui-monospace,monospace; font-size:13px; margin:8px 0; }
+code { background:#0d1117; padding:1px 5px; border-radius:4px; font-size:13px; }
+footer { color:var(--muted); font-size:12px; margin-top:24px; }
+</style></head><body>
+<header>
+  <h1>🏛️ itops 治理後台 — 單據生命週期</h1>
+  <p>從服務請求到正式部署的端到端治理記錄,對映 ITIL / ISO 27001 / ISO 20000 / ISMS。
+     資料即版控真相(deployments / cmdb / last-deploy / 整合 manifest)。</p>
+  <div class="stat"><b>4</b> 變更單</div>
+  <div class="stat"><b>2</b> 成功部署</div>
+  <div class="stat"><b>31</b> 已合併變更</div>
+  <div class="stat"><b>2</b> 組態項(CI)</div>
+</header>
+
+    <section>
+      <h2>① 需求單 Service Request</h2>
+      <div class="tags"><span class="badge itil">ITIL 請求實現</span> <span class="badge iso">ISO 20000 服務請求管理</span></div>
+      <p>需求由服務目錄的 Issue Form 提出(<code>.github/ISSUE_TEMPLATE/service-request.yml</code>),轉成變更單時以 <code>serviceRequest</code> 連回。</p><table><tr><th>單號</th><th>標題</th><th>狀態</th><th>標籤</th></tr><tr><td>#21</td><td>[DRIFT] supply-chain-backend — CMDB 與線上不一致</td><td><span class="badge state">CLOSED</span></td><td>drift</td></tr></table>
+    </section>
+    <section>
+      <h2>② 變更單 Change Record</h2>
+      <div class="tags"><span class="badge itil">ITIL 變更管理</span> <span class="badge iso">ISO 27001 A.8.32 / ISMS 變更控制</span></div>
+      <table><tr><th>App</th><th>環境</th><th>變更型別</th><th>優先級</th><th>需求單</th><th>產物 digest</th><th>資料分級</th></tr><tr><td>supply-chain-backend</td><td><span class="badge env">openliberty-sandbox</span></td><td><span class="badge ok">standard</span></td><td>P3</td><td>#0</td><td class='mono'>sha256:707f88c2ef9b…</td><td>internal</td></tr><tr><td>supply-chain-backend</td><td><span class="badge env">prod</span></td><td><span class="badge ok">standard</span></td><td>P3</td><td>#0</td><td class='mono'>sha256:98a5ba98f427…</td><td>confidential</td></tr><tr><td>supply-chain-backend</td><td><span class="badge env">test</span></td><td><span class="badge ok">standard</span></td><td>P3</td><td>#0</td><td class='mono'>sha256:707f88c2ef9b…</td><td>internal</td></tr><tr><td>supply-chain-backend</td><td><span class="badge env">uat</span></td><td><span class="badge ok">standard</span></td><td>P3</td><td>#0</td><td class='mono'>sha256:98a5ba98f427…</td><td>internal</td></tr></table>
+    </section>
+    <section>
+      <h2>③ 換版軌跡 Promotion Trail</h2>
+      <div class="tags"><span class="badge itil">ITIL 發布管理</span> <span class="badge iso">ISO 27001 A.8.28 完整性(build once)</span></div>
+      <p class='app'>supply-chain-backend <span class='muted small'>(build once → 同一 digest 逐區晉級)</span></p><table class='trail'><tr><td class='ok'><div><span class="badge env">openliberty-sandbox</span> ✅ 已部署</div><div class='mono small'>sha256:707f88c2ef9b…</div></td><td class='ok'><div><span class="badge env">test</span> ✅ 已部署</div><div class='mono small'>sha256:707f88c2ef9b…</div></td><td class=''><div><span class="badge env">uat</span> 📋 已定義</div><div class='mono small'>sha256:98a5ba98f427…</div></td><td class=''><div><span class="badge env">prod</span> 📋 已定義</div><div class='mono small'>sha256:98a5ba98f427…</div></td></tr></table>
+    </section>
+    <section>
+      <h2>④ 執行記錄 Execution</h2>
+      <div class="tags"><span class="badge itil">ITIL 部署管理</span> <span class="badge iso">ISO 20000 發布與部署 / A.8.28</span></div>
+      <table><tr><th>App</th><th>環境</th><th>部署前驗章閘門</th><th>完整性閉環</th><th>煙霧測試</th><th>結果</th><th>時間(UTC)</th></tr><tr><td>supply-chain-backend</td><td><span class="badge env">openliberty-sandbox</span></td><td><span class="badge ok">passed</span></td><td class='small'>deployed-image == verified-digest</td><td>GET /health, GET /api/products</td><td><span class="badge ok">success</span></td><td class='small'>2026-06-15T12:06:08Z</td></tr><tr><td>supply-chain-backend</td><td><span class="badge env">test</span></td><td><span class="badge ok">passed</span></td><td class='small'>deployed-image == verified-digest</td><td>GET /health, GET /api/products</td><td><span class="badge ok">success</span></td><td class='small'>2026-06-15T12:16:52Z</td></tr></table>
+    </section>
+    <section>
+      <h2>⑤ 關單 / 閉環 Closure</h2>
+      <div class="tags"><span class="badge itil">ITIL 變更收尾 + PIR</span> <span class="badge iso">ISO 27001 A.5.36 合規審查</span></div>
+      <p>變更經 PR 合併留痕(共 31 筆已合併變更),最近:</p><ul><li>#32 feat(integration): supply-chain → itops 真整合(itops 當活的部署治理中樞) <span class='muted small'>2026-06-15</span></li><li>#31 docs(closure): A 收口 — COMPLIANCE_MAP 補 D/E/F + portfolio case-study <span class='muted small'>2026-06-15</span></li><li>#30 feat(live): B 真 live 端到端 — 雙環境同 digest + 修 5 個真 live 雷 <span class='muted small'>2026-06-15</span></li><li>#29 feat(test-gate): 把測試做成不可繞過的供應鏈閘門(補最大缺口) <span class='muted small'>2026-06-15</span></li><li>#28 docs(governance): 傳統 VM 治理 vs CaaS 治理 對照 explainer <span class='muted small'>2026-06-15</span></li><li>#27 chore(branch-protection): 將 promote-gate 納入 main 必過檢查 <span class='muted small'>2026-06-15</span></li><li>#26 [Phase F][TASK-F4] CAB-as-code 正式區核准 + GitOps 回退演練(收關 Gate F) <span class='muted small'>2026-06-15</span></li><li>#25 [Phase F][TASK-F3] 過版閘門 policy-promote:三閘門(範圍/血統+順序/重新驗章) <span class='muted small'>2026-06-15</span></li><li>#24 [Phase F][TASK-F2] 過版生成器:只改目標環境 source.digest 的過版 PR <span class='muted small'>2026-06-15</span></li><li>#23 [Phase F][TASK-F1] 多環境骨架:test/uat/prod(同一 digest,config 隨區) <span class='muted small'>2026-06-15</span></li><li>#22 [Phase E][TASK-E5] 補單流程:補單≠漂白(收關 Gate E) <span class='muted small'>2026-06-15</span></li><li>#20 [Phase E][TASK-E4] 漂移偵測 / 對帳:主動抓出沒走流程的變更(補單偵測) <span class='muted small'>2026-06-15</span></li><li>#19 [Phase E][TASK-E3] 例外可見性:稽核報告加「例外統計 + PIR 完成率」 <span class='muted small'>2026-06-15</span></li><li>#18 [Phase E][TASK-E2] 急件路徑 + 強制 PIR:先做後審不賴帳 <span class='muted small'>2026-06-15</span></li><li>#17 chore(branch-protection): deploy-gate-selftest + change-class 納入 main 必過檢查 <span class='muted small'>2026-06-15</span></li></ul><p>事後檢討(PIR)單:0 筆;漂移單:1 筆(均已關閉)。漂移對帳由 <code>reconcile.py</code> 比對 CMDB 期望態 vs 線上實際。</p>
+    </section>
+    <section>
+      <h2>⑥ supply-chain 部署整合</h2>
+      <div class="tags"><span class="badge itil">供應鏈交棒</span> <span class="badge iso">ISO 27001 A.8.29 安全測試 / A.8.28 供應鏈</span></div>
+      <p>supply-chain 左側(build→test→sign)交棒給 itops 右側(驗章→部署→CMDB),靠 handoff manifest 串接。鏈:</p><div class='chain'>build → mvn test → cosign 簽 → <b>handoff</b> → itops 驗章閘門 → 部署 → CMDB</div><table><tr><th>App</th><th>digest</th><th>測試證據</th><th>簽章</th><th>建置方</th></tr><tr><td>supply-chain-backend</td><td class='mono small'>sha256:707f88c2ef9b…</td><td>3 筆 / sha256:35fc6602…</td><td>supply-chain-backend.sig</td><td>supply-chain</td></tr></table>
+    </section>
+<footer>由 scripts/governance_console.py 從版控記錄生成 · itops_and_caas ·
+  這是 COMPLIANCE_MAP 第五節「翻譯層」的具象化。</footer>
+</body></html>
