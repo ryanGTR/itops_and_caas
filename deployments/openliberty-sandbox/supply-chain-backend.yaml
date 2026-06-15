@@ -17,6 +17,8 @@ spec:
     artifact: localhost/supply-chain-backend           # D6 本機實跑:podman build 的真實映像
     version: d6                                         # 本次部署的版本 tag
     digest: "sha256:98a5ba98f42739af7dad598132ae90506bdc2bd2f0c2ec805d0d4d67735f3e7a"  # D4 簽章後回填(對應 sig/supply-chain-backend.sig)
+    gitCommit: "def4567"                               # 血統:源碼 commit(範例值;真實由 D4 build 帶 github.sha)
+    gitTag: "v0.0.0-EXAMPLE"                            # 發布 tag(範例值;部署釘 digest 不釘 tag)
   dataClassification: internal   # 模擬分級（非真實機密分級）
   runtime:
     type: openliberty
