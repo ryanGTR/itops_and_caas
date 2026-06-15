@@ -1,0 +1,24 @@
+# DeploymentRequest — prod 環境（範例,公開 PoC 假值）— TASK-F1
+# 多環境晉級:三區共用「同一個 digest」(build once, promote),差異只在下方 runtime config。
+# 對應:docs/multi-env-promotion.md、docs/provenance-and-identifiers.md
+apiVersion: golden-path/v1
+kind: DeploymentRequest
+metadata:
+  app: supply-chain-backend
+  environment: prod
+  serviceRequest: "#0"
+  requestedBy: developer
+  changeType: standard          # 過版到 prod 的型別(prod 過版實務走 normal,需 CAB,見 Phase F)
+  priority: P3
+spec:
+  source:                       # ★ 三區完全相同——同一個已驗章的產物
+    artifact: localhost/supply-chain-backend
+    version: d6
+    digest: "sha256:98a5ba98f42739af7dad598132ae90506bdc2bd2f0c2ec805d0d4d67735f3e7a"
+    gitCommit: "def4567"        # 血統:源碼 commit(範例值;真實由 D4 build 帶入 github.sha)
+    gitTag: "v0.0.0-EXAMPLE"    # 發布 tag(範例值;人用 tag 挑、系統用 digest 釘)
+  dataClassification: confidential     # 隨環境(prod 較高)
+  runtime:                      # ★ 隨環境不同的 config(image 不變)
+    type: openliberty
+    httpPort: 9080
+    contextRoot: /
