@@ -69,8 +69,9 @@ def collect():
     cis = {}
     for f in sorted(glob.glob("cmdb/*/*.yaml")):
         d = load_yaml(Path(f))
-        if d.get("kind") == "ConfigurationItem":
-            m = d.get("metadata", {})
+        m = d.get("metadata", {}) or {}
+        # 只取 software 層 CI 當「部署實例」(host/middleware 層另由 cmdb 拓樸視圖呈現)
+        if d.get("kind") == "ConfigurationItem" and m.get("type") == "deployed-application":
             cis[(m.get("environment"), m.get("app"))] = {"ci": d, "path": f}
     records = {}
     for f in sorted(glob.glob("deployments/*/last-deploy.json")):

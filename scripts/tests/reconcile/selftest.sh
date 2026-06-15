@@ -15,7 +15,9 @@ trap 'rm -rf "$TMP"' EXIT
 python3 - "$TMP" <<'PY'
 import json, sys, yaml
 from pathlib import Path
-ci = yaml.safe_load(next(Path("cmdb").rglob("*.yaml")).read_text(encoding="utf-8"))
+# 取 software 層 CI(有 runtime.instance + source.digest);多層 CMDB 後 host/middleware 沒有這些。
+ci = next(c for c in (yaml.safe_load(p.read_text(encoding="utf-8")) for p in Path("cmdb").rglob("*.yaml"))
+          if (c.get("metadata") or {}).get("type") == "deployed-application")
 inst = ci["spec"]["runtime"]["instance"]
 dig = ci["spec"]["source"]["digest"]
 d = Path(sys.argv[1])

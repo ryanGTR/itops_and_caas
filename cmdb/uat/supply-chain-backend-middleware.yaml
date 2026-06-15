@@ -1,0 +1,22 @@
+# CMDB Configuration Item(CI)— 由 scripts/cmdb_register.py 於部署成功後產出。
+# 多層拓樸:host(VM/宿主)→ middleware(OpenLiberty)→ software(app),以 ciId 互連。
+# 版控史即組態基線與變更史。對應:ISO 20000 組態管理 / ISO 27001 A.8.9。請勿手改。
+apiVersion: cmdb/v1
+kind: ConfigurationItem
+metadata:
+  ciId: ci-mw-supply-chain-backend-uat
+  type: middleware
+  app: supply-chain-backend
+  environment: uat
+spec:
+  attributes:
+    product: OpenLiberty
+    runtime: openliberty
+    instance: supply-chain-backend
+    httpPort: 9082
+    url: http://127.0.0.1:9082
+  relationships:
+  - type: hosted-on
+    target: ci-host-uat
+  - type: hosts
+    target: ci-supply-chain-backend-uat

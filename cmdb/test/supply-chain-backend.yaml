@@ -1,6 +1,6 @@
 # CMDB Configuration Item(CI)— 由 scripts/cmdb_register.py 於部署成功後產出。
-# 一個 CI = 一個應用在某環境的已部署實例;版控史即組態基線與變更史。
-# 對應:ISO 20000 組態管理 / ISO 27001 A.8.9。請勿手改——重跑 register 會覆寫。
+# 多層拓樸:host(VM/宿主)→ middleware(OpenLiberty)→ software(app),以 ciId 互連。
+# 版控史即組態基線與變更史。對應:ISO 20000 組態管理 / ISO 27001 A.8.9。請勿手改。
 apiVersion: cmdb/v1
 kind: ConfigurationItem
 metadata:
@@ -37,4 +37,4 @@ spec:
   - type: signed-by
     target: trust/cosign.pub
   - type: runs-on
-    target: test
+    target: ci-mw-supply-chain-backend-test
