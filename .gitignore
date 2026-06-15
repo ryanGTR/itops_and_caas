@@ -42,3 +42,6 @@ Thumbs.db
 *~
 .idea/
 .vscode/
+
+# 整合交接產物(執行期生成,不版控)
+integration/inbox/
