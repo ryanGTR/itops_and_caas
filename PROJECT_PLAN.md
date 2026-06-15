@@ -497,6 +497,91 @@
 **驗收標準**:一般變更留下獨立核准軌跡;文件說明多人對映。
 
 **對應治理控制項**:ISO 27001 A.5.3 職責分離;A.8.32 變更管理。
+## 5-F. Phase F 工作分解 — 多環境晉級與過版(test → UAT → 正式)
+
+> 本階段把 Phase D 的單一環境黃金路徑,延伸成「同一個產物逐區晉級(過版)」的流程。
+> 鐵律:**build once, promote the same digest**——環境差異只在 config,不在 artifact。
+> 設計與框架對映見 `docs/multi-env-promotion.md`;識別子觀念見 `docs/provenance-and-identifiers.md`;
+> 決策見 `docs/adr/0004-multi-env-promotion.md`。執行慣例同前:逐 TASK、每步停下確認、不跳階段;
+> 護欄變更(workflows/、policies/、CODEOWNERS)PR 標 SoD。
+
+---
+
+#### [TASK-F0] 藍圖與 ADR(本任務)
+
+**目標**:動程式前,把多環境晉級與 promote PR 的設計與框架對映寫清楚、決策留痕。
+
+**步驟**:
+1. 寫 `docs/multi-env-promotion.md`(過版流程 + promote PR 設計 + 三道閘門)。
+2. 寫 `docs/provenance-and-identifiers.md`(branch/tag/commit SHA/digest 角色)。
+3. 寫 `docs/adr/0004-multi-env-promotion.md`;`PROJECT_PLAN.md` 加本 Phase F 段 + Gate F。
+
+**驗收標準**:藍圖 + 觀念頁 + ADR 完成,Ryan 審核確認方向後,ADR 改 accepted,再進 F1。
+
+**對應治理控制項**:稽核留痕文化(延續 ADR-0001~0003)。
+
+---
+
+#### [TASK-F1] 多環境骨架(環境即程式碼)
+
+**目標**:把單環境延伸成 test/uat/prod 三區,各自 config、各自 CMDB。
+
+**前置條件**:F0 ADR accepted;D3~D7 就位。
+
+**步驟**:
+1. 建 `deployments/{test,uat,prod}/<app>.yaml`(同一 digest,各自 runtime config)。
+2. 建 `iac/environments/{test,uat,prod}/`;`cmdb/{test,uat,prod}/`。
+3. `source` 加 `gitCommit`/`gitTag` 欄位(若 Phase E 未先加);文件化 config 與密鑰的環境分離。
+
+**驗收標準**:三區可各自部署同一 digest、各自登錄 CMDB;config 隨區不同、image 不變。
+
+**對應治理控制項**:ISO 27001 Secure by Default;ISO 20000 組態管理。
+
+---
+
+#### [TASK-F2] 過版生成器(promote PR)
+
+**目標**:用腳本把「上一區已驗章的 digest」推進下一區,自動開 promote PR,禁手貼 digest。
+
+**步驟**:
+1. 建 `scripts/promote.py`:讀來源環境 **CMDB CI**(確認態),寫目標環境 DeploymentRequest 的 `source`,**不碰 runtime/config**。
+2. 加 `.github/workflows/promote.yml`(workflow_dispatch: from/to/app)生成 PR,body 自動填過版單。
+
+**驗收標準**:一次 dispatch 能開出「只改目標環境 source.digest」的 PR;過版單留痕完整。
+
+**對應治理控制項**:ISO 20000 變更管理 / 發布管理;ISO 27001 A.8.32。
+
+---
+
+#### [TASK-F3] 過版閘門(`policy-promote`)
+
+**目標**:把「只准推進 digest、不准跳關、不准夾帶、每區重驗章」寫成 fail-closed 閘門。
+
+**步驟**:
+1. 建 `scripts/validate_promote.py` + `.github/workflows/policy-promote.yml`:
+   - **Diff 範圍守衛**:只准動目標環境 `source`,動到別的(程式/護欄/config/別環境)即擋。
+   - **血統+順序守衛**:digest 必須存在於「上一區」CMDB,否則擋(禁跳關)。
+   - **重新驗章**:在目標環境重跑 D5 deploy gate。
+2. 加反例 self-test(夾帶 / 跳關 / 未驗章皆被擋)。
+
+**驗收標準**:合規過版放行;夾帶私貨 / 跳關 / 未驗章被擋;self-test 通過。
+
+**對應治理控制項**:ISO 27001 A.8.28 完整性;ISO 20000 發布驗證。
+
+---
+
+#### [TASK-F4] 正式區核准(CAB-as-code)+ 回退演練
+
+**目標**:正式過版需變更權責者核准;並演練 GitOps 式回退。
+
+**步驟**:
+1. CODEOWNERS 對 `deployments/prod/` 指定變更權責者 → prod promote PR 需其核准;文件化單人→多人對映。
+2. 演練 `git revert` promote PR → digest 退回上一已知良好 → 重新部署;記錄回退時間與結果。
+
+**驗收標準**:正式過版留下獨立核准軌跡;revert 能可靠回退到前一版並留痕。
+
+**對應治理控制項**:ISO 27001 A.5.3 SoD;ISO 20000 變更管理(回退)。
+||||||| aa135ca
 
 ---
 
@@ -534,6 +619,14 @@
 - [ ] 補單以 retroactive + 強制 PIR/不符合事項處理,文件講清補單≠漂白(TASK-E5)
 
 > 全數打勾 = 急件/插單/補單都有受控通道,技術護欄全程不鬆綁,繞過流程的變更抓得到、例外量可報表化。
+### Gate F(Phase F 多環境晉級與過版完成檢查)
+- [ ] 同一 digest 能在 test/uat/prod 各自部署、各自登錄 CMDB,config 隨區不同(TASK-F1)
+- [ ] promote 生成器能開出「只改目標環境 source.digest」的過版 PR,留痕完整(TASK-F2)
+- [ ] policy-promote 擋住跳關 / 夾帶私貨 / 未驗章,合規過版放行(TASK-F3)
+- [ ] 正式過版需變更權責者核准;git revert 能可靠回退並留痕(TASK-F4)
+
+> 全數打勾 = build 一次的產物能逐區安全晉級,過版即 PR 即留痕,正式需核准、可回退。
+||||||| aa135ca
 
 ---
 
@@ -578,3 +671,7 @@
 - `docs/adr/0001-phase2-iac-stack.md` — Phase 2 IaC 技術棧決策
 - `docs/adr/0002-openliberty-runtime-and-deploy.md` — Phase D 執行環境與部署/簽章決策
 - `docs/adr/0003-exception-path-and-drift.md` — Phase E 例外路徑與漂移治理決策
+- `docs/multi-env-promotion.md` — Phase F 多環境晉級與過版藍圖(build once, promote)
+- `docs/provenance-and-identifiers.md` — branch/tag/commit SHA/digest 識別子與血統(觀念參考)
+- `docs/adr/0004-multi-env-promotion.md` — Phase F 多環境晉級與過版決策
+||||||| aa135ca
