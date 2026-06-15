@@ -1,0 +1,12 @@
+{
+  "app": "supply-chain-backend",
+  "environment": "vm-openliberty",
+  "target": "qemu/libvirt VM (OpenTofu)",
+  "vmIp": "192.168.122.180",
+  "url": "http://192.168.122.180:9080",
+  "httpPort": 9080,
+  "deployedAt": "2026-06-16T02:54:00Z",
+  "gate": "passed",
+  "integrityCheck": "deployed-app == verified-digest",
+  "result": "success"
+}

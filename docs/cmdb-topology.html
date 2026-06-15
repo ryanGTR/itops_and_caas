@@ -1,0 +1,119 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CMDB 拓樸 — host → middleware → software</title>
+<style>
+body { margin:0; background:#0f1419; color:#e6edf3; font:14px/1.55 -apple-system,"Noto Sans CJK TC",sans-serif; padding:24px; }
+h1 { font-size:22px; margin:0 0 4px; }
+.lead { color:#8b98a5; margin:0 0 18px; max-width:780px; }
+section { background:#1a2230; border:1px solid #2d3748; border-radius:10px; padding:14px 18px; margin:14px 0; }
+h2 { font-size:16px; margin:0 0 10px; color:#a371f7; }
+.chain { display:flex; flex-direction:column; gap:0; max-width:620px; }
+.node { border:1px solid #2d3748; border-radius:8px; padding:10px 14px; }
+.node.host { background:#102a26; border-color:#1f5f50; }
+.node.mw { background:#22343f; border-color:#2f5f6f; }
+.node.sw { background:#1f2a3f; border-color:#388bfd; }
+.layer { font-size:11px; color:#8b98a5; }
+.cid { font-family:ui-monospace,monospace; font-weight:600; margin:2px 0 6px; }
+.kv { display:flex; gap:8px; font-size:12.5px; }
+.kv .k { color:#8b98a5; min-width:96px; } .kv .v { font-family:ui-monospace,monospace; }
+.rels { margin-top:6px; font-size:11px; color:#6b7681; }
+.link { text-align:center; color:#388bfd; font-size:13px; padding:3px 0; }
+footer { color:#6b7681; font-size:12px; margin-top:18px; }
+</style></head><body>
+<h1>🗺️ CMDB 拓樸 — host → middleware → software</h1>
+<p class="lead">真 CMDB 的核心:Configuration Item(CI)+ 關係拓樸。這裡每個環境畫成三層鏈——
+host(VM/容器宿主)→ middleware(OpenLiberty)→ software(app),以 ciId 互連。
+共 15 個 CI、5 個環境。</p>
+<section><h2>openliberty-sandbox</h2><div class="chain">
+    <div class="node host">
+      <div class="layer">① host(硬體)</div>
+      <div class="cid">ci-host-openliberty-sandbox</div>
+      <div class="kv"><span class="k">kind</span><span class="v">container host (podman)</span></div><div class="kv"><span class="k">address</span><span class="v">127.0.0.1</span></div><div class="kv"><span class="k">provisionedBy</span><span class="v">OpenTofu</span></div><div class="kv"><span class="k">iac</span><span class="v">iac/environments/openliberty-sandbox</span></div><div class="kv"><span class="k">target</span><span class="v">podman</span></div>
+      <div class="rels">provisioned-by→iac/environments/openliberty-sandbox · hosts→mw-supply-chain-backend-openliberty-sandbox</div>
+    </div><div class="link">⇅ hosts</div>
+    <div class="node mw">
+      <div class="layer">② middleware(中介軟體)</div>
+      <div class="cid">ci-mw-supply-chain-backend-openliberty-sandbox</div>
+      <div class="kv"><span class="k">product</span><span class="v">OpenLiberty</span></div><div class="kv"><span class="k">runtime</span><span class="v">openliberty</span></div><div class="kv"><span class="k">instance</span><span class="v">supply-chain-backend</span></div><div class="kv"><span class="k">httpPort</span><span class="v">9080</span></div><div class="kv"><span class="k">url</span><span class="v">http://127.0.0.1:9080</span></div>
+      <div class="rels">hosted-on→host-openliberty-sandbox · hosts→supply-chain-backend-openliberty-sandbox</div>
+    </div><div class="link">⇅ runs-on</div>
+    <div class="node sw">
+      <div class="layer">③ software(軟體)</div>
+      <div class="cid">ci-supply-chain-backend-openliberty-sandbox</div>
+      <div class="kv"><span class="k">digest</span><span class="v">sha256:707f88c2ef9b…</span></div><div class="kv"><span class="k">version</span><span class="v">b1</span></div><div class="kv"><span class="k">url</span><span class="v">http://127.0.0.1:9080</span></div><div class="kv"><span class="k">testCount</span><span class="v">3</span></div>
+      <div class="rels">deployed-from→deployments/openliberty-sandbox/supply-chain-backend.yaml · signed-by→trust/cosign.pub · runs-on→mw-supply-chain-backend-openliberty-sandbox</div>
+    </div></div></section><section><h2>prod</h2><div class="chain">
+    <div class="node host">
+      <div class="layer">① host(硬體)</div>
+      <div class="cid">ci-host-prod</div>
+      <div class="kv"><span class="k">kind</span><span class="v">container host (podman)</span></div><div class="kv"><span class="k">address</span><span class="v">127.0.0.1</span></div><div class="kv"><span class="k">provisionedBy</span><span class="v">OpenTofu</span></div><div class="kv"><span class="k">iac</span><span class="v">iac/environments/prod</span></div><div class="kv"><span class="k">target</span><span class="v">podman</span></div>
+      <div class="rels">provisioned-by→iac/environments/prod · hosts→mw-supply-chain-backend-prod</div>
+    </div><div class="link">⇅ hosts</div>
+    <div class="node mw">
+      <div class="layer">② middleware(中介軟體)</div>
+      <div class="cid">ci-mw-supply-chain-backend-prod</div>
+      <div class="kv"><span class="k">product</span><span class="v">OpenLiberty</span></div><div class="kv"><span class="k">runtime</span><span class="v">openliberty</span></div><div class="kv"><span class="k">instance</span><span class="v">supply-chain-backend</span></div><div class="kv"><span class="k">httpPort</span><span class="v">9083</span></div><div class="kv"><span class="k">url</span><span class="v">http://127.0.0.1:9083</span></div>
+      <div class="rels">hosted-on→host-prod · hosts→supply-chain-backend-prod</div>
+    </div><div class="link">⇅ runs-on</div>
+    <div class="node sw">
+      <div class="layer">③ software(軟體)</div>
+      <div class="cid">ci-supply-chain-backend-prod</div>
+      <div class="kv"><span class="k">digest</span><span class="v">sha256:707f88c2ef9b…</span></div><div class="kv"><span class="k">version</span><span class="v">b1</span></div><div class="kv"><span class="k">url</span><span class="v">http://127.0.0.1:9083</span></div><div class="kv"><span class="k">testCount</span><span class="v">3</span></div>
+      <div class="rels">deployed-from→deployments/prod/supply-chain-backend.yaml · signed-by→trust/cosign.pub · runs-on→mw-supply-chain-backend-prod</div>
+    </div></div></section><section><h2>test</h2><div class="chain">
+    <div class="node host">
+      <div class="layer">① host(硬體)</div>
+      <div class="cid">ci-host-test</div>
+      <div class="kv"><span class="k">kind</span><span class="v">container host (podman)</span></div><div class="kv"><span class="k">address</span><span class="v">127.0.0.1</span></div><div class="kv"><span class="k">provisionedBy</span><span class="v">OpenTofu</span></div><div class="kv"><span class="k">iac</span><span class="v">iac/environments/test</span></div><div class="kv"><span class="k">target</span><span class="v">podman</span></div>
+      <div class="rels">provisioned-by→iac/environments/test · hosts→mw-supply-chain-backend-test</div>
+    </div><div class="link">⇅ hosts</div>
+    <div class="node mw">
+      <div class="layer">② middleware(中介軟體)</div>
+      <div class="cid">ci-mw-supply-chain-backend-test</div>
+      <div class="kv"><span class="k">product</span><span class="v">OpenLiberty</span></div><div class="kv"><span class="k">runtime</span><span class="v">openliberty</span></div><div class="kv"><span class="k">instance</span><span class="v">supply-chain-backend</span></div><div class="kv"><span class="k">httpPort</span><span class="v">9081</span></div><div class="kv"><span class="k">url</span><span class="v">http://127.0.0.1:9081</span></div>
+      <div class="rels">hosted-on→host-test · hosts→supply-chain-backend-test</div>
+    </div><div class="link">⇅ runs-on</div>
+    <div class="node sw">
+      <div class="layer">③ software(軟體)</div>
+      <div class="cid">ci-supply-chain-backend-test</div>
+      <div class="kv"><span class="k">digest</span><span class="v">sha256:707f88c2ef9b…</span></div><div class="kv"><span class="k">version</span><span class="v">b1</span></div><div class="kv"><span class="k">url</span><span class="v">http://127.0.0.1:9081</span></div><div class="kv"><span class="k">testCount</span><span class="v">3</span></div>
+      <div class="rels">deployed-from→deployments/test/supply-chain-backend.yaml · signed-by→trust/cosign.pub · runs-on→mw-supply-chain-backend-test</div>
+    </div></div></section><section><h2>uat</h2><div class="chain">
+    <div class="node host">
+      <div class="layer">① host(硬體)</div>
+      <div class="cid">ci-host-uat</div>
+      <div class="kv"><span class="k">kind</span><span class="v">container host (podman)</span></div><div class="kv"><span class="k">address</span><span class="v">127.0.0.1</span></div><div class="kv"><span class="k">provisionedBy</span><span class="v">OpenTofu</span></div><div class="kv"><span class="k">iac</span><span class="v">iac/environments/uat</span></div><div class="kv"><span class="k">target</span><span class="v">podman</span></div>
+      <div class="rels">provisioned-by→iac/environments/uat · hosts→mw-supply-chain-backend-uat</div>
+    </div><div class="link">⇅ hosts</div>
+    <div class="node mw">
+      <div class="layer">② middleware(中介軟體)</div>
+      <div class="cid">ci-mw-supply-chain-backend-uat</div>
+      <div class="kv"><span class="k">product</span><span class="v">OpenLiberty</span></div><div class="kv"><span class="k">runtime</span><span class="v">openliberty</span></div><div class="kv"><span class="k">instance</span><span class="v">supply-chain-backend</span></div><div class="kv"><span class="k">httpPort</span><span class="v">9082</span></div><div class="kv"><span class="k">url</span><span class="v">http://127.0.0.1:9082</span></div>
+      <div class="rels">hosted-on→host-uat · hosts→supply-chain-backend-uat</div>
+    </div><div class="link">⇅ runs-on</div>
+    <div class="node sw">
+      <div class="layer">③ software(軟體)</div>
+      <div class="cid">ci-supply-chain-backend-uat</div>
+      <div class="kv"><span class="k">digest</span><span class="v">sha256:707f88c2ef9b…</span></div><div class="kv"><span class="k">version</span><span class="v">b1</span></div><div class="kv"><span class="k">url</span><span class="v">http://127.0.0.1:9082</span></div><div class="kv"><span class="k">testCount</span><span class="v">3</span></div>
+      <div class="rels">deployed-from→deployments/uat/supply-chain-backend.yaml · signed-by→trust/cosign.pub · runs-on→mw-supply-chain-backend-uat</div>
+    </div></div></section><section><h2>vm-openliberty</h2><div class="chain">
+    <div class="node host">
+      <div class="layer">① host(硬體)</div>
+      <div class="cid">ci-host-vm-openliberty</div>
+      <div class="kv"><span class="k">kind</span><span class="v">qemu/libvirt VM</span></div><div class="kv"><span class="k">address</span><span class="v">192.168.122.180</span></div><div class="kv"><span class="k">provisionedBy</span><span class="v">OpenTofu</span></div><div class="kv"><span class="k">iac</span><span class="v">iac/environments/vm-openliberty</span></div><div class="kv"><span class="k">target</span><span class="v">qemu/libvirt VM (OpenTofu)</span></div>
+      <div class="rels">provisioned-by→iac/environments/vm-openliberty · hosts→mw-supply-chain-backend-vm-openliberty</div>
+    </div><div class="link">⇅ hosts</div>
+    <div class="node mw">
+      <div class="layer">② middleware(中介軟體)</div>
+      <div class="cid">ci-mw-supply-chain-backend-vm-openliberty</div>
+      <div class="kv"><span class="k">product</span><span class="v">OpenLiberty</span></div><div class="kv"><span class="k">runtime</span><span class="v">openliberty</span></div><div class="kv"><span class="k">instance</span><span class="v">supply-chain-backend</span></div><div class="kv"><span class="k">httpPort</span><span class="v">9080</span></div><div class="kv"><span class="k">url</span><span class="v">http://192.168.122.180:9080</span></div>
+      <div class="rels">hosted-on→host-vm-openliberty · hosts→supply-chain-backend-vm-openliberty</div>
+    </div><div class="link">⇅ runs-on</div>
+    <div class="node sw">
+      <div class="layer">③ software(軟體)</div>
+      <div class="cid">ci-supply-chain-backend-vm-openliberty</div>
+      <div class="kv"><span class="k">digest</span><span class="v">sha256:707f88c2ef9b…</span></div><div class="kv"><span class="k">version</span><span class="v">b1</span></div><div class="kv"><span class="k">url</span><span class="v">http://192.168.122.180:9080</span></div><div class="kv"><span class="k">testCount</span><span class="v">3</span></div>
+      <div class="rels">deployed-from→deployments/vm-openliberty/supply-chain-backend.yaml · signed-by→trust/cosign.pub · runs-on→mw-supply-chain-backend-vm-openliberty</div>
+    </div></div></section>
+<footer>由 scripts/cmdb_topology.py 從 cmdb/ 的多層 CI 生成 · 對應 ISO 20000 組態管理 / ISO 27001 A.8.9。</footer>
+</body></html>
