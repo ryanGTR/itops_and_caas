@@ -82,6 +82,8 @@ def main() -> int:
                 "artifact": source.get("artifact"),
                 "version": source.get("version"),
                 "digest": source.get("digest"),
+                "gitCommit": source.get("gitCommit", ""),   # 血統:源碼 commit(供過版傳遞)
+                "gitTag": source.get("gitTag", ""),          # 發布 tag
                 "signature": sig_rel,
             },
             "runtime": {

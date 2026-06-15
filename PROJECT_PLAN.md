@@ -621,7 +621,7 @@
 > 全數打勾 = 急件/插單/補單都有受控通道,技術護欄全程不鬆綁,繞過流程的變更抓得到、例外量可報表化。
 ### Gate F(Phase F 多環境晉級與過版完成檢查)
 - [x] 同一 digest 能在 test/uat/prod 各自部署(tofu validate 通過)、config 隨區不同(TASK-F1)
-- [ ] promote 生成器能開出「只改目標環境 source.digest」的過版 PR,留痕完整(TASK-F2)
+- [x] promote 生成器能開出「只改目標環境 source.digest」的過版 PR,留痕完整(TASK-F2)
 - [ ] policy-promote 擋住跳關 / 夾帶私貨 / 未驗章,合規過版放行(TASK-F3)
 - [ ] 正式過版需變更權責者核准;git revert 能可靠回退並留痕(TASK-F4)
 
