@@ -53,6 +53,8 @@ Duties)的技術核心。
 | `docs/case-study.md` | 想快速理解 / 面試 | 一頁案例:人工審核 → 自動護欄,Phase 1→F 全貌 + 真 live 驗證 |
 | `docs/everything-as-code-journey.md` | 想理解整合脈絡 | 「X as code」如何層層整合進 itops 的全歷程 + 治理價值鏈 |
 | `docs/governance-console.html` | 稽核 / 主管 / demo | 治理後台:開單→變更→換版軌跡→執行→關單 的單據生命週期(firefox 開) |
+| `docs/cmdb-topology.html` | 稽核 / 工程 | CMDB 拓樸:host → middleware → software 多層 CI 關係圖 |
+| `TODO.md` | 工程 / 接續 | 待辦 backlog + 「斷 session 如何接續」指南 |
 | `integration/handoff-contract.md` | 工程 | supply-chain → itops 交接契約(整合邊界) |
 | `PROJECT_PLAN.md` | 工程 + 治理 | 完整工作分解,逐 `[TASK-xx]` 執行 |
 | `STRUCTURE.md` | 工程 | repo 結構定義 |
