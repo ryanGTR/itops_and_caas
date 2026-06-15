@@ -13,6 +13,8 @@ spec:
     artifact: localhost/supply-chain-backend
     version: d6
     digest: sha256:98a5ba98f42739af7dad598132ae90506bdc2bd2f0c2ec805d0d4d67735f3e7a
+    gitCommit: def4567
+    gitTag: v0.0.0-EXAMPLE
     signature: deployments/openliberty-sandbox/sig/supply-chain-backend.sig
   runtime:
     type: openliberty

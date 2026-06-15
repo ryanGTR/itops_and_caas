@@ -42,3 +42,6 @@ jobs:
 
       - name: 例外統計 self-test(TASK-E3)
         run: bash scripts/tests/exception-stats/selftest.sh
+
+      - name: 過版生成器 self-test(TASK-F2)
+        run: bash scripts/tests/promote/selftest.sh

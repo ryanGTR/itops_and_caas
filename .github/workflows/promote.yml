@@ -1,0 +1,100 @@
+# 過版生成器 — TASK-F2
+#
+# 手動觸發(workflow_dispatch):把「來源環境 CMDB 確認態的 digest」推進目標環境,
+# 自動開一張「只改目標環境 source.digest」的過版 PR(= 過版單)。
+# 沒人手貼 digest;PR 受 policy-promote(F3)三閘門把關後才可合併。
+#
+# 對應治理控制項:ISO 20000 變更管理 / 發布管理;ISO 27001 A.8.32。
+
+name: promote
+
+on:
+  workflow_dispatch:
+    inputs:
+      from:
+        description: "來源環境(已部署且登錄 CMDB,如 uat)"
+        required: true
+      to:
+        description: "目標環境(如 prod)"
+        required: true
+      app:
+        description: "應用名"
+        required: true
+        default: "supply-chain-backend"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: 生成過版變更(只改目標環境 source.digest)
+        id: gen
+        env:
+          FROM: ${{ inputs.from }}
+          TO: ${{ inputs.to }}
+          APP: ${{ inputs.app }}
+        run: |
+          set -euo pipefail
+          summary="$(python3 scripts/promote.py --from "$FROM" --to "$TO" --app "$APP")"
+          echo "$summary"
+          {
+            echo 'summary<<EOF'
+            echo "$summary"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 開過版 PR(過版單)
+        if: steps.gen.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FROM: ${{ inputs.from }}
+          TO: ${{ inputs.to }}
+          APP: ${{ inputs.app }}
+          SUMMARY: ${{ steps.gen.outputs.summary }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          branch="promote/${TO}-${APP}-${RUN_ID}"
+          git config user.name "promote-bot"
+          git config user.email "promote-bot@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add "deployments/${TO}/${APP}.yaml"
+          git commit -m "[promote] ${APP}: ${FROM} → ${TO}(只改 source.digest)"
+          git push -u origin "$branch"
+          gh pr create --title "[promote] ${APP}: ${FROM} → ${TO}" --body "$(cat <<BODY
+          ## 過版單(${FROM} → ${TO})
+
+          自動生成(promote workflow / TASK-F2)。**只改目標環境 \`deployments/${TO}/${APP}.yaml\` 的 \`source\`,config 不動。**
+
+          \`\`\`
+          ${SUMMARY}
+          \`\`\`
+
+          來源真相 = \`cmdb/${FROM}/${APP}.yaml\`(確認態,已部署且驗過章)。
+          受 policy-promote 三閘門把關(範圍 / 血統+順序 / 重新驗章,TASK-F3)。
+          正式環境過版需變更權責者核准(CAB-as-code,TASK-F4)。
+          BODY
+          )"
+
+      - name: 無變更則略過
+        if: steps.gen.outputs.changed == 'false'
+        run: echo "目標已與來源同步,無需過版。"
