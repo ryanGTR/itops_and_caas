@@ -31,13 +31,17 @@ trap 'rm -rf "$TMP"' EXIT
 python3 - "$TMP" <<'PY'
 import sys, copy, yaml
 from pathlib import Path
-src = next(Path("cmdb").rglob("*.yaml"))
-ci = yaml.safe_load(src.read_text(encoding="utf-8"))
+# 取 software 層 CI(有 source/relationships);多層 CMDB 後 host/middleware 沒有 source。
+ci = next(c for c in (yaml.safe_load(p.read_text(encoding="utf-8")) for p in Path("cmdb").rglob("*.yaml"))
+          if (c.get("metadata") or {}).get("type") == "deployed-application")
 env = ci["metadata"]["environment"]
 
-# 夾具 A:digest 與來源 DeploymentRequest 漂移(竄改 / 過期 CMDB)
+# 夾具 A:digest 與來源 DeploymentRequest 漂移(竄改 / 過期 CMDB)。
+# 去掉指向其他 CI(ci-*)的關係,讓孤立夾具不會因圖完整性而誤判,只測 digest 漂移。
 a = copy.deepcopy(ci)
 a["spec"]["source"]["digest"] = "sha256:" + "0" * 64
+a["spec"]["relationships"] = [r for r in a["spec"]["relationships"]
+                              if not str(r.get("target", "")).startswith("ci-")]
 d = Path(sys.argv[1], "drift", env); d.mkdir(parents=True)
 (d / "app.yaml").write_text(yaml.safe_dump(a, allow_unicode=True), encoding="utf-8")
 
