@@ -57,9 +57,30 @@ cmdb/
     └── <應用名>.yaml      # 一個 CI = 一個應用在某環境的已部署實例
 ```
 
+## 漂移對帳（TASK-E4）：抓出「沒走流程的變更」
+
+CMDB 是「期望態」;真相要靠**對帳**確認。`scripts/reconcile.py` 比對每個 CI 的
+`source.digest`(期望)與**線上實際 running image digest**——不符或實例缺漏即漂移
+(有人手動改線上 / 塞了來路不明映像 / 把實例移掉 = 補單沒登錄)。
+
+```bash
+python3 scripts/reconcile.py                 # 本機:用 podman 實際態對帳
+python3 scripts/reconcile.py --open-issue     # 漂移 → 自動開 GitHub issue 留痕
+python3 scripts/reconcile.py --observed-file state.json   # 餵入實際態(self-test / 離線 / 正式)
+```
+
+| | PoC(本專案) | 銀行正式環境 |
+|---|---|---|
+| 實際態來源 | `podman inspect`(本機) | registry digest / orchestrator(k8s)/ 監控匯出 |
+| 跑在哪 | 本機 / host 排程(podman 在 host,**非 GitHub hosted runner**) | 持續對帳(GitOps controller / 定期 job) |
+| 漂移處置 | 開 issue(`--open-issue`) | 告警 + 自動矯正 / 變更工單 |
+
+> 漂移 ≠ 自動修復。依「**補單≠漂白**」:(a) 補登 retroactive 變更 + PIR;(b) root cause 為何繞得過。
+
 ## See Also
 - `scripts/cmdb_register.py`（部署成功 → 登錄 CI）
 - `scripts/cmdb_validate.py`（CMDB 基線驗證,fail-closed）
+- `scripts/reconcile.py`（漂移對帳:期望態 vs 線上實際態,TASK-E4）
 - `deployments/README.md`（上游:部署請求即程式碼）
 - `docs/cmdb-and-evidence-chain.md`（CMDB + 端到端證據鏈,TASK-D7）
 - `docs/golden-path-request-to-deploy.md`（全貌,階段⑦）
