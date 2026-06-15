@@ -622,7 +622,7 @@
 - [x] 同一 digest 能在 test/uat/prod 各自部署(tofu validate 通過)、config 隨區不同(TASK-F1)
 - [x] promote 生成器能開出「只改目標環境 source.digest」的過版 PR,留痕完整(TASK-F2)
 - [x] policy-promote 擋住跳關 / 夾帶私貨 / 未驗章,合規過版放行(TASK-F3)
-- [ ] 正式過版需變更權責者核准;git revert 能可靠回退並留痕(TASK-F4)
+- [x] 正式過版需變更權責者核准;git revert 能可靠回退並留痕(TASK-F4)
 
 > 全數打勾 = build 一次的產物能逐區安全晉級,過版即 PR 即留痕,正式需核准、可回退。
 

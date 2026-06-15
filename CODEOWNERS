@@ -36,3 +36,16 @@
 
 # ── 「用護欄」區域:自助範本,一般開發者可貢獻 ──────────────────
 /scaffold/                  @ryanGTR
+
+# ── 正式環境過版:CAB-as-code,需「變更權責者」核准(TASK-F4)──────────
+# 把 ITIL 的 CAB(變更諮詢委員會)/ ECAB 落成程式碼:動到正式環境部署檔的 PR
+# (即 prod 過版單),必須由變更權責者(change authority)以 code owner 身分核准。
+# 這是「正式過版需獨立核准軌跡」的技術強制——較低環境(test/uat/sandbox)不在此列,
+# 開發者自助過版即可;唯獨 prod 多一道人工核准閘(鬆綁的是對象/時點,不是技術閘門)。
+#
+# 單人 → 多人對映(本 repo 個人帳號暫共用 @ryanGTR,正式落地請替換):
+#   @ryanGTR  →  @org/change-advisory-board(常規正式變更,CAB)
+#                ＋ 緊急時 @org/ecab(emergency CAB,先核後審,仍受 PIR 約束)
+# ⚠️ 須搭配 branch protection 開「Require review from Code Owners」才有強制力,
+#    見 scripts/setup_branch_protection.sh;詳見 docs/cab-and-rollback.md。
+/deployments/prod/          @ryanGTR
