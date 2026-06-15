@@ -237,7 +237,110 @@ def build_golden_path_section(chains) -> list[str]:
     return md
 
 
-def build_report(repo, since, until, runs, prs, chains=None) -> str:
+# --- 例外統計(TASK-E3):讓例外的成本可見(ISO 20000 服務報告)---
+CHANGE_TYPE_LABELS = {
+    "standard": "標準變更", "normal": "一般變更",
+    "emergency": "急件", "retroactive": "補單",
+}
+
+
+def collect_exception_stats(deployments_dir: str):
+    """掃 DeploymentRequest,統計變更型別 / 插單 / 急件清單。離線可跑;無 yaml 回 None。"""
+    if yaml is None:
+        return None
+    root = Path(deployments_dir)
+    if not root.is_dir():
+        return None
+    counts = {k: 0 for k in CHANGE_TYPE_LABELS}
+    expedited = 0
+    emergencies = []  # 急件清單(app/env/owner/dueBy)
+    total = 0
+    for f in sorted(root.rglob("*.yaml")):
+        if "/sig/" in f.as_posix():
+            continue
+        try:
+            req = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+        except (OSError, yaml.YAMLError):
+            continue
+        if req.get("kind") != "DeploymentRequest":
+            continue
+        total += 1
+        meta = req.get("metadata", {}) or {}
+        ct = meta.get("changeType", "standard")
+        counts[ct] = counts.get(ct, 0) + 1
+        if meta.get("expedite"):
+            expedited += 1
+        if ct == "emergency":
+            pir = meta.get("pir", {}) or {}
+            emergencies.append({
+                "app": meta.get("app", "?"), "env": meta.get("environment", "?"),
+                "owner": pir.get("owner", "—"), "dueBy": pir.get("dueBy", "—"),
+            })
+    return {"total": total, "counts": counts, "expedited": expedited,
+            "emergencies": emergencies}
+
+
+def collect_pir_status(repo: str):
+    """從 GitHub 取 label=pir 的 issue,算 PIR 完成率(closed/total)。需 gh;失敗回 None。"""
+    try:
+        issues = gh_json([
+            "issue", "list", "--repo", repo, "--label", "pir",
+            "--state", "all", "--limit", "200", "--json", "number,state",
+        ])
+    except SystemExit:
+        return None
+    if not issues:
+        return {"total": 0, "closed": 0, "open": 0}
+    closed = sum(1 for i in issues if str(i.get("state", "")).upper() == "CLOSED")
+    return {"total": len(issues), "closed": closed, "open": len(issues) - closed}
+
+
+def build_exception_section(stats, pir) -> list[str]:
+    md: list[str] = []
+    md.append("## 五、例外統計(急件 / 插單 / 補單的成本可見化)")
+    md.append("")
+    md.append("> 例外無法消滅,但要**可見**。零成本的例外會侵蝕標準流程——本節讓管理層")
+    md.append("> 看見例外的量與 PIR 履行情況,逼業務面對 trade-off(ISO 20000 服務報告 / A.5.36)。")
+    md.append("")
+    if not stats:
+        md.append("_無 PyYAML 或無 DeploymentRequest,略過例外統計。_")
+        md.append("")
+        return md
+
+    total = stats["total"] or 1  # 避免除以 0
+    rows = []
+    for ct, label in CHANGE_TYPE_LABELS.items():
+        n = stats["counts"].get(ct, 0)
+        rows.append([label, ct, str(n), f"{n / total * 100:.0f}%"])
+    rows.append(["— 其中插單(expedite)", "expedite", str(stats["expedited"]),
+                 f"{stats['expedited'] / total * 100:.0f}%"])
+    md.append(md_table(["變更型別", "changeType", "件數", "佔比"], rows))
+    md.append("")
+
+    # PIR 完成率
+    if pir is None:
+        md.append("> PIR 完成率:無法取得(需 gh)。")
+    elif pir["total"] == 0:
+        md.append("> PIR:本 repo 尚無 PIR issue(label=pir)。")
+    else:
+        rate = pir["closed"] / pir["total"] * 100
+        md.append(
+            f"> **PIR 完成率:{rate:.0f}%**(已關 {pir['closed']} / 共 {pir['total']};"
+            f"未結 {pir['open']} 張待回顧)。"
+        )
+    md.append("")
+
+    # 未結急件 PIR 承諾清單(到期追蹤)
+    if stats["emergencies"]:
+        md.append("**急件 PIR 承諾(到期追蹤):**")
+        md.append("")
+        erows = [[e["app"], e["env"], e["owner"], e["dueBy"]] for e in stats["emergencies"]]
+        md.append(md_table(["應用", "環境", "PIR 負責人", "到期(dueBy)"], erows))
+        md.append("")
+    return md
+
+
+def build_report(repo, since, until, runs, prs, chains=None, exc_stats=None, pir=None) -> str:
     md: list[str] = []
     md.append("# 稽核證據報告(Audit Evidence Report)")
     md.append("")
@@ -311,8 +414,11 @@ def build_report(repo, since, until, runs, prs, chains=None) -> str:
     # --- Section 4: golden-path end-to-end evidence chain (TASK-D7) ---
     md.extend(build_golden_path_section(chains or []))
 
-    # --- Section 5: conclusion ---
-    md.append("## 五、稽核結論")
+    # --- Section 5: exception statistics (TASK-E3) ---
+    md.extend(build_exception_section(exc_stats, pir))
+
+    # --- Section 6: conclusion ---
+    md.append("## 六、稽核結論")
     md.append("")
     total_runs = sum(len(v) for v in runs.values())
     total_blocked = sum(
@@ -326,6 +432,13 @@ def build_report(repo, since, until, runs, prs, chains=None) -> str:
         md.append(
             f"- 端到端黃金路徑部署 **{len(chains)}** 件,其中 **{complete}** 件七階段物證齊備"
             "(見第四節),體現「請求→部署→CMDB」全程可追溯。"
+        )
+    if exc_stats:
+        c = exc_stats["counts"]
+        exc_n = c.get("emergency", 0) + c.get("retroactive", 0)
+        md.append(
+            f"- 變更共 **{exc_stats['total']}** 件,其中例外(急件+補單)**{exc_n}** 件、"
+            f"插單 **{exc_stats['expedited']}** 件(見第五節);例外受控且護欄全程不鬆綁。"
         )
     md.append("")
     md.append("> 本報告為自動產出之合規證據(ISO 27001 A.5.36 / ISO 20000 服務報告)。")
@@ -358,7 +471,9 @@ def main() -> int:
     runs = collect_runs(repo, since, until)
     prs = collect_merged_prs(repo, since)
     chains = collect_golden_path_chains(args.deployments_dir, args.cmdb_dir)
-    report = build_report(repo, since, until, runs, prs, chains)
+    exc_stats = collect_exception_stats(args.deployments_dir)
+    pir = collect_pir_status(repo)
+    report = build_report(repo, since, until, runs, prs, chains, exc_stats, pir)
 
     if args.output:
         Path(args.output).write_text(report, encoding="utf-8")

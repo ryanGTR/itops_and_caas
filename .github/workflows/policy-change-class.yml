@@ -39,3 +39,6 @@ jobs:
 
       - name: 急件 PIR 開單器 self-test(TASK-E2)
         run: bash scripts/tests/pir/selftest.sh
+
+      - name: 例外統計 self-test(TASK-E3)
+        run: bash scripts/tests/exception-stats/selftest.sh
