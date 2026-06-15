@@ -45,6 +45,10 @@ jobs:
         with:
           python-version: "3.12"
 
+      # PyYAML:讀 DeploymentRequest / CMDB 以產出「黃金路徑端到端證據鏈」一節(TASK-D7)。
+      - name: Install PyYAML
+        run: pip install pyyaml
+
       # gh CLI 在 GitHub runner 上已內建;用內建 GITHUB_TOKEN 認證即可。
       - name: Generate audit report
         env:

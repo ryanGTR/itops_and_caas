@@ -1,0 +1,38 @@
+# 護欄:CMDB 組態基線驗證 (TASK-D7)
+#
+# 把 CMDB(cmdb/**.yaml)當受治理的組態基線:每個 PR 重跑驗證,確保每個 CI
+# 結構完整、物證(簽章 / DeploymentRequest / 信任根)存在,且 CI 的 digest 與
+# 來源 DeploymentRequest 一致(防 CMDB 與真相漂移)。並跑 fail-closed self-test。
+#
+# 對應治理控制項:ISO 20000 組態管理;ISO 27001 A.8.9 組態管理 / A.5.36 合規審查。
+
+name: policy-cmdb
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  cmdb-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: 驗證 CMDB 組態基線
+        run: python3 scripts/cmdb_validate.py
+
+      - name: CMDB 驗證器 self-test(fail-closed)
+        run: bash scripts/tests/cmdb/selftest.sh
