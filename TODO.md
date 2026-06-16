@@ -31,13 +31,17 @@
 
 ## 📋 待辦(依優先序)
 
-### 🔥 0 — itops × iTop(Combodo)真整合(現行主線,2026-06-16 起)
+### ✅ 0 — itops × iTop(Combodo)真整合(2026-06-16 完成,PR 待合)
 > Ryan 一路說的「itop」其實是 **iTop 產品**(真 ITSM/CMDB)。詳見 `integration/itop/README.md`。
-- [x] iTop 3.2.2 本機 Docker 站起來 + ITIL 安裝完成(101 表)
-- [ ] **啟用 REST API**(給 user「REST Services User」profile + config `allowed_rest_profiles`)
-- [ ] 寫 `scripts/itop_sync.py`:把 host/middleware/software CI + 服務請求 + 部署 推進 iTop(對映表在 README)
-- [ ] 接 trigger:部署成功後呼叫 itop_sync(像 cmdb_register 但目標是真 iTop)
-> ⚠️ 接續者注意:iTop 容器/VM 已於 2026-06-16 早上關閉(Ryan 上班)。重站 iTop 看 `integration/itop/README.md` 的「如何重現」(~5 分鐘)。
+- [x] iTop 3.2.2 本機 Docker 站起 + **完整 ITIL 模型**(220 表;修掉舊安裝只裝出最小模型的雷)
+- [x] **啟用 REST API**:給 admin「REST Services User」profile;建 least-privilege 服務帳號 `svc_itops_sync`
+      (註:3.2.x 的閘門是 `secure_rest_services`+`HasProfile`,舊筆記的 `allowed_rest_profiles` 無效)
+- [x] 寫 `scripts/itop_sync.py`:host→Server、middleware→WebServer、app→WebApplication(原生影響圖)
+      + 服務請求→UserRequest + 部署→RoutineChange;冪等;五環境 15 CI 跑通
+- [x] 接 trigger:`integration/itops_ingest.sh` 部署成功後 opt-in(`ITOP_SYNC=1`)呼叫 itop_sync(軟失敗,不擋部署)
+- [x] 一鍵重現腳本 `integration/itop/setup-itop.sh`(容器→安裝→修權限→啟 REST→建帳號;密碼走 `.itop-secrets`)
+> ⚠️ 接續者:iTop 容器若關了,跑 `bash integration/itop/setup-itop.sh` 即可重站(真的 ~3 分鐘,已腳本化驗過)。
+> 深化(非阻塞):同步狀態回寫治理後台、工單帶 CAB 欄位、改用 iTop Synchro Data Source 自動 reconcile。
 
 ### A — 收口 / 可見性(低成本、對履歷回報高)
 - [ ] 把 CMDB 拓樸圖 + 單據追溯掛進治理後台 / README 文件導覽

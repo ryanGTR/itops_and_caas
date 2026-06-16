@@ -8,6 +8,8 @@
 !.env.example
 secrets/
 credentials/
+# iTop 本機開發密碼(由 integration/itop/setup-itop.sh 產生)
+.itop-secrets
 
 # --- Python(scripts/ 與後續稽核工具) ---
 __pycache__/
