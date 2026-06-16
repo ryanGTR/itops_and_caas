@@ -1,57 +1,73 @@
-# itops × iTop(Combodo)整合 — WIP
+# itops × iTop(Combodo)整合
 
-> 目標:把 itops 的 git 治理記錄推進**真正的 ITSM/CMDB 產品 iTop**(Combodo),
-> 讓 iTop 當系統 of record(真 CMDB 拓樸 + 服務台 UI),itops 保留 git 的 fail-closed 護欄。
-> 起因:Ryan 一路說的「itop」其實是這個產品;他的 CMDB「硬體→middleware→軟體」心智模型 = iTop 的資料模型。
+> 把 itops 的 git 版控 CMDB(`cmdb/<env>/*.yaml`)推進**真正的 ITSM/CMDB 產品 iTop**(Combodo),
+> 讓 iTop 當系統 of record(真 CMDB 拓樸 + 服務台 / 變更 UI),itops 保留 git 的 fail-closed 護欄。
+> 起因:Ryan 一路說的「itop」其實是這個產品;他的「硬體→middleware→軟體」CMDB 心智模型 = iTop 的資料模型。
 
-## 進度(2026-06-16)
+## 狀態:✅ 已打通(2026-06-16)
 
-- ✅ **iTop 3.2.2 已在本機跑起來並安裝完成**(Docker `vbkunin/itop`,ITIL 模組,101 張表)。
-- ⏳ **下一步(到公司接續)**:啟用 REST API → 寫 `scripts/itop_sync.py` 把 itops 記錄推進 iTop。
+- ✅ iTop 3.2.2 本機站起 + **完整 ITIL 資料模型**(220 表;Server/WebServer/WebApplication/UserRequest/Change 齊全)。
+- ✅ REST API 啟用 + **least-privilege 服務帳號** `svc_itops_sync`(只給 REST/組態/變更/服務台 profile,非 admin)。
+- ✅ `scripts/itop_sync.py`:讀 `cmdb/<env>/*.yaml` → upsert 進 iTop(冪等)。已對五個環境 15 CI 跑通。
+- ✅ 觸發點:`integration/itops_ingest.sh` 部署成功後(opt-in `ITOP_SYNC=1`)自動呼叫 sync。
 
-## 如何重現(在任何機器把 iTop 站起來)
+## 一鍵重現(把整套 iTop 站起來)
 
 ```bash
-# 1. 跑容器(含 MySQL/MariaDB)
-podman run -d -p 8000:80 --name itop docker.io/vbkunin/itop:latest
-
-# 2. 無人值守安裝(param 範本在本目錄;先把 __SET_YOUR_ADMIN_PWD__ 換成你的密碼)
-podman cp integration/itop/itop-install.xml itop:/tmp/itop-install.xml
-podman exec itop sh -c 'rm -f /var/www/html/data/.maintenance; \
-  cd /var/www/html/setup/unattended-install && \
-  php unattended-install.php --param-file=/tmp/itop-install.xml'
-# 完成後 → http://localhost:8000  (admin / 你設的密碼)
+bash integration/itop/setup-itop.sh        # 容器→安裝→修權限→啟 REST→建服務帳號
+source .itop-secrets                        # 載入產生的密碼(此檔已被 .gitignore)
+python3 scripts/itop_sync.py --env vm-openliberty --org Demo
+# → http://localhost:8000  (admin / 見 .itop-secrets)
 ```
+
+`setup-itop.sh` 把以下手動步驟固化成冪等腳本:跑 `vbkunin/itop` 容器 → 無人值守安裝
+(`itop-install.xml`)→ 修權限/DB 帳號 → 給 admin「REST Services User」profile → 建服務帳號。
+機敏密碼一律走環境變數(未設則自動產生),寫到 `.itop-secrets`,不進版控。
+
+## CI / 工單對映(已用真 API 驗證)
+
+選 `WebServer` 串 OpenLiberty,是為了得到 iTop **原生的影響分析圖** `app → web server → host`
+(用真 FK `webserver_id` / `system_id`,而非鬆散的清單)。
+
+| itops CI(`cmdb/<env>/`)         | iTop class       | 關係(FK)                         |
+|----------------------------------|------------------|------------------------------------|
+| host(libvirt VM / 容器宿主)     | `Server`         | —(見下方「為何不是 VirtualMachine」)|
+| middleware(OpenLiberty)         | `WebServer`      | `system_id` → host                 |
+| software(已部署 app)           | `WebApplication` | `webserver_id` → middleware        |
+| `provenance.serviceRequest`(#34)| `UserRequest`    | `functionalcis_list` → app         |
+| 一次部署 / 過版                  | `RoutineChange`  | `functionalcis_list` → app         |
+
+互補不互斥:不合規的東西在 itops 閘門就被擋(根本不會 sync 進 iTop);合規且部署成功的才登錄成正式組態。
+**過版用 `RoutineChange`(例行變更)** 呼應「護欄預先授權」——不是每次都走重量級審核。
 
 ## 安裝踩過的雷(都已解,記給接續者)
 
-1. **`datamodel_version` 必須對上 iTop 版本**:此映像是 iTop **3.2.2**,datamodel_version 要填 **3.2.1**(看 `datamodels/2.x/version.xml`);填 2.7.0 會編譯失敗。
-2. **`selected_modules` 不能只列 extensions**:要含 base 模組(`itop-profiles-itil` 定義 user_rights/groups、`itop-welcome-itil`、`authent-local`、`itop-config`、`itop-structure`、`itop-attachments`),否則 compile 報 `Missing unique tag: groups in /itop_design/user_rights`。
-3. **失敗重跑前要清乾淨**:`rm /var/www/html/data/.maintenance` + `DROP DATABASE itop_db; CREATE DATABASE itop_db;`,否則卡在維護模式、install 腳本不輸出。
-4. **param XML 的 `type="array"` 標記要保留**(options/selected_modules/selected_extensions),否則空值被當 string → `in_array()` TypeError;`<database>` 要含 `db_tls_enabled`/`db_tls_ca`。
+1. **模組清單要填「真實模組名」,不是 `installation.xml` 的 `extension_code`**。
+   早期版本把 `itop-config-mgmt-datacenter`、`itop-service-mgmt-enterprise`… 放進 `<selected_extensions>`,
+   那些是 installation.xml 的 choice code,**不是模組目錄名**,unattended 安裝會靜默忽略 →
+   只編出最小模型(只有 `Person`),`Server`/`UserRequest`/`Change` 全缺。
+   ✅ 已改:`<selected_modules>` 直接列真實模組(`itop-datacenter-mgmt`、`itop-request-mgmt-itil`、
+   `itop-change-mgmt-itil`…)。**驗收別只看「101 表 / installed」,要實際查類別存不存在**。
+2. **`datamodel_version` 要對上版本**:此映像是 iTop **3.2.2**,填 **3.2.1**(看 `datamodels/2.x/version.xml`)。
+3. **install 用 root CLI 跑 → 檔案/連線對不上 www-data**:
+   - `config-itop.php` 與 `data/`、`log/` 被建成 `root:root` → apache(www-data)讀不到 →
+     REST 報 `Could not find configuration file`。修:`chown -R www-data:www-data conf data log env-production`。
+   - MariaDB `root` 只能 unix_socket 登入(限 OS root)→ www-data 連 DB 被拒(errno 1698)。
+     修:建專用 DB 帳號 `itop`(帶密碼),改 `config-itop.php` 的 `db_user`/`db_pwd`。
+4. **REST 閘門是 `secure_rest_services` + 硬編碼 `HasProfile('REST Services User')`**(見 `webservices/rest.php`)。
+   舊筆記說的 `allowed_rest_profiles` 對 3.2.x **無效**。正解:給要用 REST 的帳號「REST Services User」profile。
+5. **失敗重跑要清乾淨**:`rm data/.maintenance` + `DROP DATABASE itop_db; CREATE DATABASE …`,否則卡維護模式。
+6. **runit 容器別用 `apachectl -k graceful`**:它會另起一隻 rogue apache。要讓設定生效就 `podman restart`(由 runit 重起)。
 
-## 下一步:啟用 REST + 寫 sync(到公司做)
+## 安全/治理註記
 
-1. **啟用 REST API**:給一個 user「**REST Services User**」profile;`conf/production/config-itop.php` 加 `allowed_rest_profiles`(含該 profile)。測試:
-   ```bash
-   curl -s "http://localhost:8000/webservices/rest.php?version=1.3" \
-     --data-urlencode auth_user=admin --data-urlencode auth_pwd=<pwd> \
-     --data-urlencode 'json_data={"operation":"list_operations"}'
-   ```
-2. **寫 `scripts/itop_sync.py`**:讀 itops 的記錄,經 REST `core/create`/`core/update` 推進 iTop。對映:
+- `svc_itops_sync` 是 least-privilege 服務帳號:有建立/更新 CI 與工單的權,但**無刪除權**(刪除留給 admin)。
+  這呼應 SoD——同步機器人只會「登錄」,不會「抹除」紀錄。
+- 本機開發密碼走 `.itop-secrets`(gitignore);正式環境應接 Vault / secret manager,別落地明文。
+- 對應治理控制項:ISO 20000 組態/變更管理;ISO 27001 A.8.9 組態管理、A.5.23 雲端服務使用。
 
-   | itops 記錄 | iTop class | 關係 |
-   |-----------|-----------|------|
-   | host CI(VM/宿主) | `Server` / `VirtualMachine` | — |
-   | middleware CI(OpenLiberty) | `Middleware`(或 `OtherSoftware`) | runs on Server |
-   | software CI(app) | `WebApplication` / `ApplicationSolution` | depends on Middleware |
-   | 服務請求 issue(如 #34) | `UserRequest`(工單) | refers to CI |
-   | 部署/過版 | `Change`(`NormalChange`/`RoutineChange`) | impacts CI |
+## 後續可深化(非阻塞)
 
-   證據鏈:itops 的 `serviceRequest`→iTop ticket ref;digest/簽章→CI 屬性或 attachment。
-3. **觸發點**:`itops_ingest.sh` / `deploy_openliberty*.sh` 部署成功後呼叫 `itop_sync.py`(像 cmdb_register 那樣,但目標是真 iTop)。
-
-## 設計要點
-
-- iTop = 真 CMDB/ITSM 系統 of record;itops = git 護欄 + 政策即程式碼。**互補不互斥**:不合規的東西在 itops 的閘門就被擋(根本不會 sync 進 iTop);合規的才登錄到 iTop 當正式組態。
-- 這把 itops 的 `cmdb-as-code`(YAML)從「自幹的薄片」升級成「餵真 ITSM 工具」。
+- 把同步狀態回寫進治理後台 console(哪些 CI 已進 iTop)。
+- 服務請求/變更單帶 caller/team/CAB 欄位,模擬真正的服務台/CAB 流程。
+- 用 iTop 的 Synchro Data Source(資料同步來源)取代直接 REST upsert,得到自動 reconcile/孤兒清理。

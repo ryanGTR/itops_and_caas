@@ -60,5 +60,19 @@ bash scripts/deploy_openliberty.sh \
 say "[4/4] CMDB 登錄(組態 + 證據鏈)"
 python3 scripts/cmdb_register.py --request "$REQUEST"
 
+# ── 5.(可選)推進真 iTop(Combodo)當系統 of record ──────────
+# iTop 是下游 ITSM/CMDB,不是部署閘門——它掛了不該擋部署,故 opt-in 且軟失敗。
+# 啟用:export ITOP_SYNC=1 且設好 ITOP_PWD(REST 服務帳號密碼;見 integration/itop/README.md)。
+if [ "${ITOP_SYNC:-0}" = "1" ]; then
+  say "[5] 推進真 iTop(opt-in;系統 of record)"
+  if [ -z "${ITOP_PWD:-}" ]; then
+    echo "  ⚠ 已開 ITOP_SYNC 但未設 ITOP_PWD——略過 iTop 同步(不擋部署)。"
+  elif python3 scripts/itop_sync.py --env "$ENVIRONMENT" --org "${ITOP_ORG:-Demo}"; then
+    :
+  else
+    echo "  ⚠ iTop 同步失敗(可能 iTop 未啟動)——不擋部署;CMDB-as-code 仍是真相。稍後可手動重跑 itop_sync.py。"
+  fi
+fi
+
 echo
 echo "✅ itops 已 ingest 並治理 supply-chain 的 artifact:$APP @ $ENVIRONMENT"

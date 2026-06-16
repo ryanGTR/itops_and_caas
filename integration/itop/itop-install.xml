@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  iTop 3.2.2 無人值守安裝參數(unattended-install.php 用)。
+  ⚠️ 重點:要管 CMDB / 工單 / 變更,必須在 <selected_modules> 直接列出「真實模組名」
+     (如 itop-datacenter-mgmt、itop-request-mgmt-itil、itop-change-mgmt-itil)。
+     早期版本誤用 <selected_extensions> 放 installation.xml 的 extension_code
+     (itop-config-mgmt-datacenter…),那些 code 不會被展開 → 只裝出最小模型(只有 Person),
+     Server / UserRequest / Change 類別全部缺。此檔已改成完整 ITIL 模組清單。
+  ⚠️ 安裝前把 __SET_YOUR_ADMIN_PWD__ 換成你的管理者密碼(別 commit 真密碼)。
+-->
 <installation>
   <mode>install</mode>
   <source_dir>datamodels/2.x/</source_dir>
@@ -18,26 +27,53 @@
   <old_addon></old_addon>
   <options type="array"/>
   <mysql_bindir></mysql_bindir>
+  <selected_extensions type="array"/>
   <selected_modules type="array">
-    <item>itop-profiles-itil</item>
-    <item>itop-welcome-itil</item>
+    <!-- 核心(必裝):組織/人員/團隊/Profile/結構/工單基底 -->
     <item>authent-local</item>
+    <item>authent-token</item>
     <item>itop-attachments</item>
+    <item>itop-backup</item>
     <item>itop-config</item>
+    <item>itop-config-mgmt</item>
+    <item>itop-core-update</item>
+    <item>itop-files-information</item>
+    <item>itop-profiles-itil</item>
     <item>itop-structure</item>
-  </selected_modules>
-  <selected_extensions type="array">
-    <item>itop-config-mgmt-datacenter</item>
-    <item>itop-config-mgmt-end-user</item>
-    <item>itop-config-mgmt-storage</item>
-    <item>itop-config-mgmt-virtualization</item>
-    <item>itop-service-mgmt-enterprise</item>
-    <item>itop-ticket-mgmt-itil</item>
-    <item>itop-ticket-mgmt-itil-user-request</item>
-    <item>itop-ticket-mgmt-itil-incident</item>
-    <item>itop-ticket-mgmt-itil-enhanced-portal</item>
+    <item>itop-themes-compat</item>
+    <item>itop-tickets</item>
+    <item>itop-welcome-itil</item>
+    <item>itop-ui-copypaste</item>
+    <item>itop-attribute-class-set</item>
+    <item>itop-attribute-encrypted-password</item>
+    <item>combodo-db-tools</item>
+    <item>combodo-my-account</item>
+    <item>combodo-password-expiration</item>
+    <!-- CMDB:資料中心(Server/Rack)/末端裝置(PC)/儲存/虛擬化(VirtualMachine) -->
+    <item>itop-datacenter-mgmt</item>
+    <item>itop-endusers-devices</item>
+    <item>itop-storage-mgmt</item>
+    <item>itop-virtualization-mgmt</item>
+    <!-- 服務管理(企業內部版)+ SLA -->
+    <item>itop-service-mgmt</item>
+    <item>itop-sla-computation</item>
+    <!-- ITIL 工單:服務請求 / 事件 / 問題 / 已知錯誤 / 變更 -->
+    <item>itop-request-mgmt-itil</item>
+    <item>itop-incident-mgmt-itil</item>
+    <item>itop-problem-mgmt</item>
+    <item>itop-knownerror-mgmt</item>
     <item>itop-change-mgmt-itil</item>
-    <item>itop-config-mgmt-core</item>
-    <item>itop-kown-error-mgmt</item>
-  </selected_extensions>
+    <!-- bridge:把 CMDB / 資料中心 / 虛擬化 / 儲存 / 末端裝置 接上服務與工單 -->
+    <item>itop-bridge-cmdb-services</item>
+    <item>itop-bridge-cmdb-ticket</item>
+    <item>itop-bridge-datacenter-mgmt-services</item>
+    <item>itop-bridge-virtualization-mgmt-services</item>
+    <item>itop-bridge-storage-mgmt-services</item>
+    <item>itop-bridge-endusers-devices-services</item>
+    <item>itop-bridge-virtualization-storage</item>
+    <!-- 入口網(報修)與相依 -->
+    <item>itop-portal-base</item>
+    <item>itop-portal</item>
+    <item>itop-faq-light</item>
+  </selected_modules>
 </installation>
