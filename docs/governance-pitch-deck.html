@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>治理簡報 — 把合規從投影片變成系統事實</title>
+<style>
+/* ── 為「老花眼長者 + 10m 長會議室 / 5m 寬屏幕」設計 ──
+   原則:超大字、極高對比、一張一訊息、極少字、寬鬆留白、無細體無低對比色。
+   16:9 PowerPoint 尺寸(13.333in × 7.5in);純 CSS,weasyprint 直接轉 PDF(無 JS 依賴)。 */
+@page { size: 13.333in 7.5in; margin: 0; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { font-family: "Noto Sans CJK TC","Noto Sans TC","Noto Sans",sans-serif; }
+body { color: #111; }
+
+.slide {
+  position: relative;
+  width: 13.333in; height: 7.5in;
+  padding: 70px 88px 64px;
+  background: #ffffff;
+  page-break-after: always;
+  display: flex; flex-direction: column;
+  border-top: 14px solid #103a8f;     /* 高對比導引條 */
+}
+.slide:last-child { page-break-after: avoid; }
+
+.kicker { font-size: 26px; font-weight: 700; color: #103a8f;
+  letter-spacing: 2px; margin-bottom: 14px; }
+h1 { font-size: 50px; font-weight: 800; line-height: 1.18; color: #0b0b0b; }
+h1 .accent { color: #103a8f; }
+h1 .warn { color: #c0271e; }
+.rule { width: 150px; height: 8px; background: #103a8f; margin: 22px 0 10px; }
+
+.body { margin-top: 26px; font-size: 36px; line-height: 1.5; font-weight: 500; }
+ul { list-style: none; }
+li { margin: 16px 0; padding-left: 52px; position: relative; }
+li::before { content: "▍"; position: absolute; left: 0; color: #103a8f; font-weight: 800; }
+.muted { color: #555; }
+.fill { color: #c0271e; font-weight: 700; }   /* [填:…] 一眼可見要替換 */
+
+/* 巨大數字 / 一句話重點 */
+.huge { font-size: 132px; font-weight: 800; color: #103a8f; line-height: 1.05; }
+.oneliner { font-size: 46px; font-weight: 800; line-height: 1.35; }
+
+/* 置中型投影片(封面 / 金句) */
+.center { justify-content: center; }
+.center .kicker { font-size: 30px; }
+.title-main { font-size: 64px; font-weight: 800; line-height: 1.16; }
+.title-sub { font-size: 34px; font-weight: 600; color: #333; margin-top: 28px; }
+
+/* 兩欄(角色好處 / 決策選項) */
+.cols { display: flex; gap: 40px; margin-top: 28px; }
+.col { flex: 1; }
+.col .h { font-size: 30px; font-weight: 800; color: #103a8f; margin-bottom: 8px; }
+.col .t { font-size: 30px; font-weight: 500; line-height: 1.4; }
+
+/* 對照(名目 vs 真 / policy vs system) */
+.vs { display: flex; gap: 36px; margin-top: 30px; align-items: stretch; }
+.vs .box { flex: 1; border: 4px solid #ccc; border-radius: 14px; padding: 26px 30px; }
+.vs .bad { border-color: #c0271e; }
+.vs .good { border-color: #1d8a3a; }
+.vs .lab { font-size: 30px; font-weight: 800; margin-bottom: 10px; }
+.vs .bad .lab { color: #c0271e; }
+.vs .good .lab { color: #1d8a3a; }
+.vs .it { font-size: 28px; line-height: 1.45; }
+
+/* 決策選項 */
+.opt { font-size: 32px; line-height: 1.4; margin: 14px 0; padding-left: 16px; border-left: 10px solid #ccc; padding-top: 4px; padding-bottom: 4px; }
+.opt.rec { border-left-color: #1d8a3a; font-weight: 700; }
+.opt.bad { border-left-color: #c0271e; }
+.opt b { color: #103a8f; }
+
+.foot { position: absolute; bottom: 26px; left: 88px; right: 88px;
+  display: flex; justify-content: space-between;
+  font-size: 20px; color: #888; }
+.demo-tag { display:inline-block; background:#c0271e; color:#fff; font-size:28px;
+  font-weight:800; padding:6px 20px; border-radius:8px; }
+</style>
+</head>
+<body>
+
+<!-- S0 封面 + BLUF -->
+<section class="slide center">
+  <div class="kicker">治理提案 · BOTTOM LINE UP FRONT</div>
+  <div class="title-main">我們有合規政策,<br>卻無法用<span style="color:#103a8f">系統</span>證明它被執行。</div>
+  <div class="title-sub">一個 90 天試點,能讓它變成「可證明、且不拖慢交付」。</div>
+  <div class="foot"><span>[填:提案人 / 部門]</span><span>[填:日期]</span></div>
+</section>
+
+<!-- S1 不舒服的真相 -->
+<section class="slide">
+  <div class="kicker">現況</div>
+  <h1>此刻,我們<span class="warn">無法證明</span><br>機密系統真的套了更強的控制。</h1>
+  <div class="rule"></div>
+  <div class="body">
+    <ul>
+      <li>政策說:機密資料要更嚴的控制。</li>
+      <li>問題:誰能<b>現在</b>證明線上系統真的做了?</li>
+      <li>今天的答案 ——「我們相信有人記得。」</li>
+    </ul>
+  </div>
+  <div class="foot"><span>把合規變成系統事實</span><span>1</span></div>
+</section>
+
+<!-- S2 為什麼脫鉤 -->
+<section class="slide">
+  <div class="kicker">根因 · 不是誰的錯</div>
+  <h1>政策活在文件、系統自己跑 ——<br>中間從來<span class="warn">沒有橋</span>。</h1>
+  <div class="vs">
+    <div class="box bad"><div class="lab">政策(文件)</div>
+      <div class="it">寫在 Word / wiki<br>稽核時才翻出來</div></div>
+    <div class="box bad"><div class="lab">系統(自走)</div>
+      <div class="it">照工程師寫的跑<br>不讀那份政策</div></div>
+  </div>
+  <div class="foot"><span>缺的是機制,不是努力</span><span>2</span></div>
+</section>
+
+<!-- S3 代價 -->
+<section class="slide">
+  <div class="kicker">代價</div>
+  <h1>這道斷層,每年讓我們付出 ——</h1>
+  <div class="cols" style="margin-top:34px">
+    <div class="col"><div class="huge">[填:N]</div><div class="col t">人天<br>稽核前人工湊證據</div></div>
+    <div class="col"><div class="huge">[填:M]</div><div class="col t">個<br>重複的稽核發現</div></div>
+    <div class="col"><div class="huge">[填:X]</div><div class="col t">次<br>「政策說了、系統沒做」</div></div>
+  </div>
+  <div class="foot"><span class="fill">填入公司真實數字(沒精確值就給範圍)</span><span>3</span></div>
+</section>
+
+<!-- S4 洞察 -->
+<section class="slide center">
+  <div class="kicker">洞察 · 轉折點</div>
+  <div class="oneliner">合規不該是<span style="color:#c0271e">事後檢查的文件</span>,<br>
+    而該<span style="color:#103a8f">內建在變更進入系統的唯一通道</span>上。</div>
+  <div class="rule"></div>
+  <div class="body" style="font-size:40px;font-weight:700">
+    每條控制 = 一個資料欄位 + 一道擋它的閘門 + 一份自動物證。
+  </div>
+  <div class="foot"><span>從「管文件」翻轉成「管系統」</span><span>4</span></div>
+</section>
+
+<!-- S5 DEMO -->
+<section class="slide center">
+  <div class="kicker"><span class="demo-tag">現場示範</span></div>
+  <div class="title-main" style="margin-top:24px">同一條管線,翻一個分級標籤,<br>系統<span style="color:#c0271e">當場擋下</span>不合規的部署。</div>
+  <div class="body" style="font-size:34px">
+    internal → <b style="color:#1d8a3a">放行</b>　　confidential → <b style="color:#c0271e">擋下</b>(列出缺的控制)
+  </div>
+  <div class="title-sub">「我沒改任何程式,只翻了一個標籤 —— 政策從此是系統裡<b>不可繞過的事實</b>。」</div>
+  <div class="foot"><span>這是顧問不會帶的東西:會動的證據</span><span>5</span></div>
+</section>
+
+<!-- S6 WIIFM -->
+<section class="slide">
+  <div class="kicker">對各角色的意義</div>
+  <h1>風險可證明、稽核不救火、<br>交付更快又更安全。</h1>
+  <div class="cols">
+    <div class="col"><div class="h">風險 / CISO</div><div class="t">控制可證明<br>靠例外掌舵</div></div>
+    <div class="col"><div class="h">稽核</div><div class="t">連續保證<br>不再年度救火</div></div>
+    <div class="col"><div class="h">CIO / 交付</div><div class="t">更快<br>且更安全</div></div>
+    <div class="col"><div class="h">工程</div><div class="t">不再替不是<br>自己的決策背書</div></div>
+  </div>
+  <div class="foot"><span>房間裡每個人都有理由說 yes</span><span>6</span></div>
+</section>
+
+<!-- S7 組織微調 -->
+<section class="slide">
+  <div class="kicker">組織也要微調 · 這是賦權</div>
+  <h1>資安從「擋每個變更」<br>升級為「定政策、靠例外治理」。</h1>
+  <div class="body">
+    <ul>
+      <li>平台團隊:擁有「鋪好的路」(引擎)。</li>
+      <li>產品團隊:專心出業務,合規無感。</li>
+      <li>治理 / 資安:寫政策、裁例外,不逐筆把關。</li>
+    </ul>
+  </div>
+  <div class="foot"><span>management by exception</span><span>7</span></div>
+</section>
+
+<!-- S8 我們在哪(誠實) -->
+<section class="slide">
+  <div class="kicker">我們現在在哪 · 誠實</div>
+  <h1>多數控制目前只是<span class="warn">貼了標籤</span>、<br>沒被系統強制 —— 這可修,我知道怎麼修。</h1>
+  <div class="vs">
+    <div class="box bad"><div class="lab">名目(現在)</div>
+      <div class="it">政策有寫<br>系統沒強制<br>出事才發現</div></div>
+    <div class="box good"><div class="lab">真(試點後)</div>
+      <div class="it">缺控制就擋下<br>自動留物證<br>隨時可證明</div></div>
+  </div>
+  <div class="foot"><span>誠實 = 可信度 + 急迫感</span><span>8</span></div>
+</section>
+
+<!-- S9 決策 -->
+<section class="slide">
+  <div class="kicker">今天請你們決定</div>
+  <h1>批准一個 90 天、<span class="accent">單一服務</span>的治理試點。</h1>
+  <div style="margin-top:24px">
+    <div class="opt rec">A(推薦) 90 天試點 · <b>[填:一個服務]</b> · 3 個成功指標 — 小、可逆、不動其他交付</div>
+    <div class="opt bad">B 先做一輪全面評估 — 又一份報告,問題依舊不可證明</div>
+    <div class="opt bad">C 維持現狀 — 持續救火 + 風險仍不可證明([填:第 3 頁的數字])</div>
+  </div>
+  <div class="body" style="font-size:30px;margin-top:18px">
+    要的:一位 sponsor <span class="fill">[填:誰]</span> · 一個團隊+服務 <span class="fill">[填]</span> · 時間盒 90 天
+  </div>
+  <div class="foot"><span>小、可逆、有 sponsor → 容易當場點頭</span><span>9</span></div>
+</section>
+
+<!-- S10 金句收尾 -->
+<section class="slide center">
+  <div class="kicker">一句話</div>
+  <div class="oneliner">把每條規定翻譯成<br>
+    「一個欄位 + 一道閘門 + 一份物證」,<br>
+    規定就從<span style="color:#c0271e">牆上的政策</span>,<br>
+    變成系統裡<span style="color:#103a8f">不可繞過的事實</span>。</div>
+  <div class="foot"><span>[填:提案人]</span><span>10</span></div>
+</section>
+
+</body>
+</html>
