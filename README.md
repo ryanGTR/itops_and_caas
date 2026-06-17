@@ -3,7 +3,7 @@
 > Platform Engineering × ISO 27001 / ISO 20000 治理對齊
 > **進度**:Phase 1 + 2 + D + E + F 全數落地(原始碼 → IaC → 部署 → 例外 → 多環境晉級)
 >
-> 👉 **想快速理解這個專案**,先讀 [`docs/case-study.md`](./docs/case-study.md)(一頁案例:把治理從「人工審核」重寫成「自動護欄」)。
+> 👉 **第一次來,先讀 [`PORTFOLIO.md`](./PORTFOLIO.md)**(一頁總覽:這是什麼、證明了什麼、依你是誰怎麼讀);想看一頁案例則讀 [`docs/case-study.md`](./docs/case-study.md)。
 >
 > 📢 **這是公開的學習用 PoC(proof-of-concept)**,用來示範一個銀行內部開發者
 > 平台「該長什麼樣」。**不含任何真實資料或憑證**,文件中的「內部/機密」字眼
@@ -50,7 +50,9 @@ Duties)的技術核心。
 
 | 檔案 | 給誰看 | 內容 |
 |------|--------|------|
+| `PORTFOLIO.md` | 第一次來 / 面試 | **門面**:一頁總覽,證明了什麼、依你是誰怎麼讀(先讀這個) |
 | `docs/case-study.md` | 想快速理解 / 面試 | 一頁案例:人工審核 → 自動護欄,Phase 1→F 全貌 + 真 live 驗證 |
+| `docs/retrospective.md` | 面試 / 接續 | **收尾回顧(v1.0)**:證明了什麼、**真 vs 模擬**誠實表、招牌設計、為了什麼、模式切換 |
 | `docs/everything-as-code-journey.md` | 想理解整合脈絡 | 「X as code」如何層層整合進 itops 的全歷程 + 治理價值鏈 |
 | `docs/framework-conformance-assessment.md` | 稽核 / 資安 / 面試 | ISMS/ISO20000/ITIL 精神符合度**誠實自評** + 逐項**系統落地解法**(規定→資料欄位→閘門→物證);附「控制項↔系統綁定」對照表與給公司的落地模式 |
 | `docs/greenfield-governance-platform.md` | 架構 / 主管 / 面試 | **拉高一層**:若從頭建治理平台讓紙上合規真正有效——現代 cloud 8 層參考架構 + 組織操作模型(團隊拓樸/management by exception)+ P0–P4 階段計劃 |
