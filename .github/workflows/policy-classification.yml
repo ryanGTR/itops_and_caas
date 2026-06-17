@@ -1,0 +1,39 @@
+# 護欄:資料分級 → 控制矩陣
+#
+# 把 dataClassification 從裝飾標籤,變成「會驅動差異化控制、且系統強制」的 policy 輸入
+# (ISMS 風險為本)。對每個 DeploymentRequest fail-closed 驗:它的分級要求的控制
+# (核可數/加密/網路/漏洞掃描)有沒有被滿足。缺 → 擋。每個 PR 重跑驗證 + self-test。
+#
+# 對應治理控制項:ISO 27001 風險為本 / A.8.24 加密 / A.8.20 網路 / A.8.8 漏洞 / A.5.3 SoD。
+# 註:本工作流為護欄變更,異動需資安審核(SoD)。
+
+name: policy-classification
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  classification-controls:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: 驗證真實部署的分級控制(enforce)
+        run: python3 scripts/validate_classification_controls.py --mode enforce
+
+      - name: 分級→控制矩陣 self-test(含翻標籤 demo,fail-closed)
+        run: bash scripts/tests/classification/selftest.sh

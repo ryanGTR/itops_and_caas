@@ -55,7 +55,7 @@ sources:
 | A.8.32 變更管理(分類) | `changeType`/`priority` | validate_change_class | 變更分類驗證 + PR | ✅ **真**(機制);⚠️ 無例外實例 |
 | A.5.3 職責分離(SoD) | `requestedBy`/`approvedBy` | branch protection:requester≠approver | PR review 記錄 | ❌ **名目**(approver=0,自填角色) |
 | ITIL 變更賦能(CAB) | CODEOWNERS / `approvedBy` | prod 需 N 位 CAB team 核可 | merge 的核准軌跡 | ❌ **名目**(SOLO,空殼) |
-| ISMS 風險為本(分級驅動) | `dataClassification` | 分級→控制矩陣 policy 閘門 | 閘門 run + 達標欄位 | ❌ **名目**(分級是裝飾) |
+| ISMS 風險為本(分級驅動) | `dataClassification` | 分級→控制矩陣 policy 閘門 | 閘門 run + 達標欄位 | ✅ **真**(`validate_classification_controls.py` + `policies/classification-matrix.yaml`;prod confidential 實扛 5 道高階控制) |
 | ISO20000 服務請求→變更 | `serviceRequest`(工單號) | 解析工單存在且已核准 | iTop UserRequest / issue | ⚠️ **半真**(僅 sandbox #34 真,prod=#0) |
 | A.5.36 合規審查 | 全部物證 | 自動稽核報告 | generate_audit_report 輸出 | ✅ **真** |
 | ISO20000 SLA/服務水準 | (無) | (無) | (無) | ❌ **缺** |
@@ -81,7 +81,11 @@ sources:
   PoC 端=用 2 個帳號或文件化 `@org/cab` 對映。**關鍵是閘門讀真實 review 身分並強制 requester≠approver**——
   這一步把「核准」從文件變成不可繞過的系統事實。
 
-### 2.2 資料分級真的驅動差異化控制(ISMS 風險為本)
+### 2.2 資料分級真的驅動差異化控制(ISMS 風險為本)— ✅ 已落地(2026-06-18)
+> **已從「名目」做成「真」**:`policies/classification-matrix.yaml`(治理端政策)+
+> `scripts/validate_classification_controls.py`(fail-closed 閘門,支援 observe→enforce)+
+> `scripts/tests/classification/selftest.sh`(含**翻標籤 demo**:internal→confidential 控制沒跟上就被擋)+
+> CI `policy-classification`。prod 那張 confidential 實際扛起 5 道高階控制(加密×2/網路/2 核可/零 HIGH)並通過。
 - **精神**:控制強度與風險(資料分級)相稱——機密系統該比內部系統管得更嚴。
 - **為什麼卡**:分級是試算表裡的標籤,**不是 policy 的輸入**;所有系統一視同仁。
 - **系統怎麼做**:

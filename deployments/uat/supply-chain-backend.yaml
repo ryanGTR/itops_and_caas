@@ -20,6 +20,9 @@ spec:
     testReport: "sha256:13c01fb542dc0f6728824f6e9f7a4c66e3e7f0b36dab75ad8cd42422dd414349"  # 測試證據指紋(隨 digest 過版)
     testCount: 3                # 測試數(test gate:>=1)
   dataClassification: internal     # 隨環境(prod 較高)
+  controls:                     # 分級→控制矩陣要求(internal:傳輸加密 + 1 核可)
+    encryptionInTransit: true
+    approvals: 1
   runtime:                      # ★ 隨環境不同的 config(image 不變)
     type: openliberty
     httpPort: 9082

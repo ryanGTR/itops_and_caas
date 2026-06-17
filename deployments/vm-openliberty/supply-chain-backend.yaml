@@ -22,6 +22,9 @@ spec:
     testReport: "sha256:13c01fb542dc0f6728824f6e9f7a4c66e3e7f0b36dab75ad8cd42422dd414349"  # 真實測試證據:mvn test 的 surefire 報告 sha256
     testCount: 3                                        # 真實測試數(ProductResourceTest 3 案全過)
   dataClassification: internal   # 模擬分級（非真實機密分級）
+  controls:                     # 分級→控制矩陣要求(internal:傳輸加密 + 1 核可)
+    encryptionInTransit: true
+    approvals: 1
   runtime:
     type: openliberty
     # 以下參數由 [TASK-D3] 的 OpenTofu openliberty-service 模組消費（預設安全）
