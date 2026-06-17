@@ -107,6 +107,7 @@ h2 {{ font-size:16px; margin:0 0 10px; color:#a371f7; }}
 .link {{ text-align:center; color:#388bfd; font-size:13px; padding:3px 0; }}
 footer {{ color:#6b7681; font-size:12px; margin-top:18px; }}
 </style></head><body>
+<p><a href="governance-console.html" style="color:#a371f7;text-decoration:none;font-size:13px;">← 回治理後台</a></p>
 <h1>🗺️ CMDB 拓樸 — host → middleware → software</h1>
 <p class="lead">真 CMDB 的核心:Configuration Item(CI)+ 關係拓樸。這裡每個環境畫成三層鏈——
 host(VM/容器宿主)→ middleware(OpenLiberty)→ software(app),以 ciId 互連。

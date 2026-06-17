@@ -43,9 +43,10 @@
 > ⚠️ 接續者:iTop 容器若關了,跑 `bash integration/itop/setup-itop.sh` 即可重站(真的 ~3 分鐘,已腳本化驗過)。
 > 深化(非阻塞):同步狀態回寫治理後台、工單帶 CAB 欄位、改用 iTop Synchro Data Source 自動 reconcile。
 
-### A — 收口 / 可見性(低成本、對履歷回報高)
-- [ ] 把 CMDB 拓樸圖 + 單據追溯掛進治理後台 / README 文件導覽
-- [ ] 治理後台加「single-ticket 連結」與「拓樸連結」入口
+### ✅ A — 收口 / 可見性(2026-06-17 完成,PR 待合)
+- [x] 把 CMDB 拓樸圖 + 單據追溯掛進治理後台 / README 文件導覽
+- [x] 治理後台加「single-ticket 連結」與「拓樸連結」入口
+      (`governance_console.build_nav()` 掃 docs/ 動態產入口;拓樸 / 單據頁加「← 回治理後台」回連,三頁互通)
 
 ### B — itops × supply-chain 真整合深化(主線;計畫見 supply-chain/itops-l4-integration-plan.md)
 - [ ] **Tier 1**:檔案型 L4 部署驗章(jar/war verify-blob)接進 supply-chain;先 github demo 跑通

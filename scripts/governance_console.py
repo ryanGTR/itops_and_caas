@@ -97,6 +97,27 @@ def section(title: str, itil: str, iso: str, body: str) -> str:
     </section>"""
 
 
+def build_nav() -> str:
+    """導覽入口:從鳥瞰後台連去其它治理視圖(拓樸圖 / 單據鑽取)。
+    掃 docs/ 下既有產物,沒有就不顯示該入口(誠實:只連存在的頁)。"""
+    items = []  # (href, 標題, 說明)
+    if Path("docs/cmdb-topology.html").exists():
+        items.append(("cmdb-topology.html", "🗺️ CMDB 拓樸圖",
+                       "host → middleware → software 多層依賴關係"))
+    for tf in sorted(glob.glob("docs/ticket-*.html")):
+        num = Path(tf).name.removeprefix("ticket-").removesuffix(".html")
+        items.append((Path(tf).name, f"🔍 單據追溯 #{num}",
+                       "單一服務請求從開單到關單的證據鏈鑽取"))
+    if not items:
+        return ""
+    cards = "".join(
+        f'<a class="navcard" href="{esc(href)}"><b>{esc(title)}</b>'
+        f'<span class="muted small">{esc(desc)}</span></a>'
+        for href, title, desc in items)
+    return ('<nav class="nav"><span class="navlabel">其它治理視圖 →</span>'
+            f'{cards}</nav>')
+
+
 def build_html(data) -> str:
     deploys, cis, records, handoffs, issues, prs = data
     apps = sorted({a for (_, a) in deploys})
@@ -252,6 +273,13 @@ td.ok {{ background:rgba(46,160,67,.08); }}
 .chain {{ background:#0d1117; border:1px solid var(--line); border-radius:8px;
   padding:10px 14px; font-family:ui-monospace,monospace; font-size:13px; margin:8px 0; }}
 code {{ background:#0d1117; padding:1px 5px; border-radius:4px; font-size:13px; }}
+.nav {{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:0 0 16px; }}
+.navlabel {{ color:var(--muted); font-size:13px; }}
+.navcard {{ display:flex; flex-direction:column; gap:2px; background:var(--card);
+  border:1px solid var(--line); border-radius:8px; padding:8px 14px;
+  text-decoration:none; color:var(--ink); transition:border-color .15s; }}
+.navcard:hover {{ border-color:var(--accent); }}
+.navcard b {{ font-size:14px; }}
 footer {{ color:var(--muted); font-size:12px; margin-top:24px; }}
 </style></head><body>
 <header>
@@ -263,6 +291,7 @@ footer {{ color:var(--muted); font-size:12px; margin-top:24px; }}
   <div class="stat"><b>{len(prs)}</b> 已合併變更</div>
   <div class="stat"><b>{len(cis)}</b> 組態項(CI)</div>
 </header>
+{build_nav()}
 {body}
 <footer>由 scripts/governance_console.py 從版控記錄生成 · itops_and_caas ·
   這是 COMPLIANCE_MAP 第五節「翻譯層」的具象化。</footer>
