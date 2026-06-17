@@ -56,6 +56,7 @@ Duties)的技術核心。
 | `docs/greenfield-governance-platform.md` | 架構 / 主管 / 面試 | **拉高一層**:若從頭建治理平台讓紙上合規真正有效——現代 cloud 8 層參考架構 + 組織操作模型(團隊拓樸/management by exception)+ P0–P4 階段計劃 |
 | `docs/exec-pitch-outline.md` | 提案 / 對外 / 職涯 | **高層簡報 playbook**:麥肯錫式逐張斷言標題骨架 + SCQA + 決策投影片 + demo 腳本 + 三大反對拆解 + 1:1 預先鋪路清單;填數字即可上場 |
 | `docs/governance-pitch-deck.html` | 提案 / 上台 | 上面 playbook 的**可上台 HTML 投影片**(11 張,16:9);為**老花眼/遠距**設計(超大字/高對比/一張一訊息);`weasyprint docs/governance-pitch-deck.html out.pdf` 即轉 PDF |
+| `docs/transition-qa-and-operating-model.md` | 提案 / 對外 / 職涯 | **簡報後 Q&A 彈藥**:長官追問「怎麼從頭開始/漸進收緊/現有管理怎麼轉/人怎麼動」的逐題答法——願景、0→1、監測→強制五段旋鈕、strangler-fig 轉移、六大管理機制、人員組織異動方案 |
 | `docs/governance-console.html` | 稽核 / 主管 / demo | 治理後台(鳥瞰):開單→變更→換版軌跡→執行→關單 的單據生命週期;頂部「其它治理視圖」入口可跳拓樸圖 / 單據追溯(firefox 開) |
 | `docs/cmdb-topology.html` | 稽核 / 工程 | CMDB 拓樸:host → middleware → software 多層 CI 關係圖(可「← 回治理後台」) |
 | `docs/ticket-34.html` | 稽核 / 工程 | 單據追溯(鑽取):單一服務請求從開單到關單的證據鏈;`scripts/ticket_trace.py --issue <n>` 可生其它單(可「← 回治理後台」) |
