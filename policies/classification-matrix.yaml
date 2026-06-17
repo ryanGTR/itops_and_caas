@@ -1,0 +1,34 @@
+# 資料分級 → 控制基線矩陣(ISMS 風險為本:控制強度與資料風險相稱)
+#
+# 這份是「治理端擁有的政策 as code」——把『dataClassification』從裝飾標籤,
+# 變成『會驅動差異化控制、且系統強制』的 policy 輸入。
+# scripts/validate_classification_controls.py 讀這份,對每個 DeploymentRequest fail-closed 驗:
+# 它的分級要求的控制,有沒有在 spec.controls 裡被滿足。缺 → 擋(enforce)。
+#
+# 合理原則(見 docs/management-direction-doctrine.md):分級少而清、每級控制真的對應風險、可機器判定。
+# 對應:ISO 27001 風險為本 / A.8.24 加密 / A.8.20 網路 / A.8.8 漏洞管理 / A.5.3 SoD(核可數)。
+#
+# 收緊靠監測→強制旋鈕(此檔配合 gate 的 --mode observe|enforce)。
+
+classifications:
+  public:
+    minApprovals: 0
+    require: []                                   # 標準閘門即可
+
+  internal:
+    minApprovals: 1                               # 一位核可
+    require:
+      - encryptionInTransit                       # 傳輸加密
+
+  confidential:
+    minApprovals: 2                               # 兩位核可(CAB / SoD)
+    require:
+      - encryptionInTransit
+      - encryptionAtRest                          # 靜態加密(A.8.24)
+      - networkRestricted                         # 不對外公開暴露(A.8.20)
+      - vulnScanClean                             # 零 HIGH / CRITICAL(A.8.8)
+
+# 控制如何在 DeploymentRequest 表達(spec.controls):
+#   encryptionInTransit / encryptionAtRest / networkRestricted: 布林,須 true
+#   approvals: 整數,須 >= minApprovals
+#   vulnScanClean: 由 spec.controls.vulnScan{high,critical} 推導(都為 0 才算 clean)
