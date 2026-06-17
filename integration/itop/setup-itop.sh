@@ -66,7 +66,10 @@ podman exec "$CTR" sh -c "
   chown -R www-data:www-data /var/www/html/conf /var/www/html/data /var/www/html/log /var/www/html/env-production 2>/dev/null
   chmod 640 /var/www/html/conf/production/config-itop.php
   sed -i \"s/'db_user' => 'root'/'db_user' => 'itop'/\" /var/www/html/conf/production/config-itop.php
-  sed -i \"s/'db_pwd' => ''/'db_pwd' => '${ITOP_DB_PWD}'/\" /var/www/html/conf/production/config-itop.php"
+  sed -i \"s/'db_pwd' => ''/'db_pwd' => '${ITOP_DB_PWD}'/\" /var/www/html/conf/production/config-itop.php
+  # 改完帳密後收成唯讀:iTop 會檢查設定檔(含 DB 帳密)是否可寫,可寫就在首頁跳 Security Warning。
+  # 必須在上面兩行 sed 之後才收(sed 需要可寫);440 = owner/group 只讀,apache(www-data) 不能改。
+  chmod 440 /var/www/html/conf/production/config-itop.php"
 REST_ID=$(podman exec "$CTR" sh -c "mysql -uitop -p'${ITOP_DB_PWD}' -N itop_db -e \
   \"SELECT id FROM priv_urp_profiles WHERE name='REST Services User';\"")
 podman exec "$CTR" sh -c "mysql -uitop -p'${ITOP_DB_PWD}' itop_db -e \
