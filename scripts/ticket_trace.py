@@ -218,6 +218,7 @@ h1 {{ font-size:22px; margin:0 0 4px; }}
 .trail {{ display:flex; flex-wrap:wrap; gap:4px; }} .env {{ background:#22343f; padding:2px 8px; border-radius:8px; font-size:12.5px; }}
 footer {{ color:#6b7681; font-size:12px; margin-top:20px; max-width:760px; }}
 </style></head><body>
+<p><a href="governance-console.html" style="color:#a371f7;text-decoration:none;font-size:13px;">← 回治理後台</a></p>
 <h1>🔎 單據追溯 {esc(ref)} — {esc(app)}</h1>
 <p class="lead">跟著 serviceRequest 號,把一張服務請求從開單到關單的證據鏈鑽取出來。
 每格的「串接鍵」(紫)就是稽核追溯靠的線:serviceRequest 串前段、digest 串後段。</p>
