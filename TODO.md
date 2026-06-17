@@ -48,10 +48,20 @@
 - [x] 治理後台加「single-ticket 連結」與「拓樸連結」入口
       (`governance_console.build_nav()` 掃 docs/ 動態產入口;拓樸 / 單據頁加「← 回治理後台」回連,三頁互通)
 
-### B — itops × supply-chain 真整合深化(主線;計畫見 supply-chain/itops-l4-integration-plan.md)
-- [ ] **Tier 1**:檔案型 L4 部署驗章(jar/war verify-blob)接進 supply-chain;先 github demo 跑通
-- [ ] **Tier 2**:cosign 金鑰後端換 Vault transit — 先 standup `~/Documents/vault-research`(實作 0%,todo 全沒勾)→ enable transit → `--key hashivault://`
+### B — itops × supply-chain 真整合深化(主線)
+> ⚠️ **主線前緣已「畢業」搬進 `supply-chain-demo` repo,不在本 itops repo**。
+> 因為整合的結論是:**把 itops 的部署右側治理移植進 supply-chain 當 L4**(不是讓
+> supply-chain 呼叫 itops),所以實作落在 `~/Documents/supply-chain/github/app/`
+> (remote `ryanGTR/supply-chain-demo`)。完整計畫 + 接續狀態在
+> **`~/Documents/supply-chain/itops-l4-integration-plan.md`**(那份才是 B 的單一真相)。
+> 以下勾選反映 2026-06-17 查證的真實狀態:
+- [x] **Tier 1**:檔案型 L4 部署驗章(jar/war verify-blob)接進 supply-chain
+      —— **已 merged**(supply-chain-demo PR #43:`app/deploy-governance/` 工具組 + backend CI `release-backend` job)
+- [~] **Tier 2**:cosign 金鑰後端換 Vault transit —— **PoC 已驗 + 在 PR #45(開著未合)**
+      (`feat/l4-tier2-vault-promote`:build-once promote + Vault transit 簽章後端;
+      Vault dev 容器 `vault-transit` PoC 在 `~/Documents/vault-research/demo/transit-cosign/`)
 - [ ] 自動化:supply-chain CI `repository_dispatch` 觸發 itops ingest(self-hosted runner)
+      —— 仍未做(= 計畫 T2.5);另計畫 T2.4(部署側變更治理移植)、T2.6(上 ADO 公司版)亦待續
 
 ### C — 補強清單(深度;誠實未竟)
 - [ ] 真 SBOM/SCA L4:syft/grype 實跑(目前是設計稿,syft/grype 未裝)
