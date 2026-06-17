@@ -1,5 +1,11 @@
 # TODO / Backlog — itops_and_caas
 
+> ## 🏁 已凍結為 v1.0(2026-06-18)
+> 收尾完成:① 門面 `PORTFOLIO.md` ② 誠實回顧 `docs/retrospective.md` ③ git tag `v1.0` + GitHub Release
+> ④ 分級→控制矩陣閘門(把自評的「分級=名目」做成真;翻標籤 demo)。**模式已從「建系統」切到
+> 「用它 + 學公文側(`docs/learning-sources.md`)+ 等對的時機」**。下方 backlog 是「若要再推」的明確未竟,
+> 非必做(見 `docs/retrospective.md` 第 6 節)。主線 L4 在 `supply-chain-demo`。
+
 > 這份是「斷 session 也能接續」的單一真相。任何新 session(或斷線後)從這裡 + 記憶接手。
 > 動工慣例:逐項做 → 開分支 → PR → 7 道必過檢查綠 → squash 合併;護欄變更(動 policies/、
 > .github/workflows/、scripts/ 閘門)PR 標「需資安審核(SoD)」。
