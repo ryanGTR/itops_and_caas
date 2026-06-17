@@ -52,6 +52,7 @@ Duties)的技術核心。
 |------|--------|------|
 | `docs/case-study.md` | 想快速理解 / 面試 | 一頁案例:人工審核 → 自動護欄,Phase 1→F 全貌 + 真 live 驗證 |
 | `docs/everything-as-code-journey.md` | 想理解整合脈絡 | 「X as code」如何層層整合進 itops 的全歷程 + 治理價值鏈 |
+| `docs/framework-conformance-assessment.md` | 稽核 / 資安 / 面試 | ISMS/ISO20000/ITIL 精神符合度**誠實自評** + 逐項**系統落地解法**(規定→資料欄位→閘門→物證);附「控制項↔系統綁定」對照表與給公司的落地模式 |
 | `docs/governance-console.html` | 稽核 / 主管 / demo | 治理後台(鳥瞰):開單→變更→換版軌跡→執行→關單 的單據生命週期;頂部「其它治理視圖」入口可跳拓樸圖 / 單據追溯(firefox 開) |
 | `docs/cmdb-topology.html` | 稽核 / 工程 | CMDB 拓樸:host → middleware → software 多層 CI 關係圖(可「← 回治理後台」) |
 | `docs/ticket-34.html` | 稽核 / 工程 | 單據追溯(鑽取):單一服務請求從開單到關單的證據鏈;`scripts/ticket_trace.py --issue <n>` 可生其它單(可「← 回治理後台」) |
